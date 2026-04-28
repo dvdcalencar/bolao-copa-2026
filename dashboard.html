@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Bolão Copa 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #FFD700;
+    --gold-dark: #C9A800;
+    --green-field: #1a6b2e;
+    --green-dark: #0d3d19;
+    --green-mid: #145224;
+    --white: #FAFAFA;
+    --silver: #C0C0C0;
+    --bronze: #CD7F32;
+    --red-accent: #e63946;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--green-dark);
+    color: var(--white);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 60px,
+      transparent 60px,
+      transparent 120px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  .app-header {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 50%, #1e5e36 100%);
+    padding: 24px 16px 18px;
+    text-align: center;
+    border-bottom: 3px solid var(--gold);
+    position: relative;
+    z-index: 1;
+  }
+  .header-trophy { font-size: 32px; line-height: 1; margin-bottom: 4px; }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .header-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .header-link {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 6px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: var(--gold);
+    text-decoration: none;
+    border: 1px solid rgba(255,215,0,0.5);
+    border-radius: 20px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  .header-link:hover { background: rgba(255,215,0,0.1); }
+
+  /* ─── CONTAINER ─── */
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 20px 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── KPI CARDS ─── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04));
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 14px;
+    padding: 18px 14px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+  }
+  .card-icon { font-size: 28px; line-height: 1; margin-bottom: 8px; }
+  .card-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .card-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin-top: 6px;
+    line-height: 1;
+  }
+  .card-foot {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── SECTION ─── */
+  .section { margin-bottom: 30px; }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255,215,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 22px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  /* ─── TABELA RANKING ─── */
+  .ranking-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ranking-table th {
+    background: rgba(255,215,0,0.1);
+    color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    padding: 11px 12px;
+    text-align: left;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255,215,0,0.25);
+  }
+  .ranking-table th.center { text-align: center; }
+  .ranking-table th.right  { text-align: right;  }
+  .ranking-table td {
+    padding: 11px 12px;
+    color: var(--white);
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .ranking-table td.center { text-align: center; }
+  .ranking-table td.right  { text-align: right; font-variant-numeric: tabular-nums; }
+  .ranking-table tr:last-child td { border-bottom: none; }
+  .ranking-table tr.podio-1 td { background: rgba(255,215,0,0.06); }
+  .ranking-table tr.podio-2 td { background: rgba(192,192,192,0.05); }
+  .ranking-table tr.podio-3 td { background: rgba(205,127,50,0.05); }
+
+  .pos-badge {
+    display: inline-block;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    line-height: 28px;
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+  }
+  .pos-1 { background: var(--gold);   color: var(--green-dark); }
+  .pos-2 { background: var(--silver); color: var(--green-dark); }
+  .pos-3 { background: var(--bronze); color: var(--white); }
+
+  .premio-cell {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .premio-zero { color: rgba(255,255,255,0.3); font-size: 13px; }
+
+  /* ─── RESULTADOS OFICIAIS (por grupo) ─── */
+  .group-block { margin-bottom: 18px; }
+  .group-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    padding: 4px 10px;
+    background: rgba(255,215,0,0.08);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 6px 6px 0;
+  }
+  .game-line {
+    display: grid;
+    grid-template-columns: 36px 1fr 70px 1fr 60px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  .game-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+  }
+  .game-team-l { text-align: right; }
+  .game-team-r { text-align: left; }
+  .game-team-flag { font-size: 16px; vertical-align: -2px; }
+  .game-team-code { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; }
+  .game-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--gold);
+    text-align: center;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 6px;
+    padding: 2px 0;
+  }
+  .game-score.pending { color: rgba(255,255,255,0.3); }
+  .game-meta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    text-align: right;
+    line-height: 1.2;
+  }
+
+  /* ─── PARTICIPANT SELECTOR ─── */
+  .participant-selector {
+    width: 100%;
+    padding: 13px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,215,0,0.3);
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%23FFD700' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+  .participant-selector:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .participant-selector option { background: var(--green-dark); }
+
+  /* ─── PARTICIPANT PREDICTIONS TABLE ─── */
+  .pred-summary {
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04));
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pred-summary-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .pred-summary-stats {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+  }
+  .pred-summary-stats strong {
+    display: block;
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .pred-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .pred-table th {
+    background: rgba(255,215,0,0.08);
+    color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 9px 10px;
+    text-transform: uppercase;
+    text-align: center;
+    border-bottom: 2px solid rgba(255,215,0,0.2);
+  }
+  .pred-table td {
+    padding: 9px 10px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--white);
+  }
+  .pred-table td.team-l { text-align: right; }
+  .pred-table td.team-r { text-align: left; }
+  .pred-table tr:last-child td { border-bottom: none; }
+
+  .score-pill {
+    display: inline-block;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: var(--white);
+  }
+  .score-pill.pending { color: rgba(255,255,255,0.3); }
+
+  .pts-badge {
+    display: inline-block;
+    min-width: 32px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+  .pts-5 { background: var(--gold);   color: var(--green-dark); }
+  .pts-3 { background: #5BC85B;       color: #fff; }
+  .pts-2 { background: #4A9DDB;       color: #fff; }
+  .pts-1 { background: #B98643;       color: #fff; }
+  .pts-0 { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+  .pts-pending { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+
+  /* ─── STATES ─── */
+  .loading, .empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: rgba(255,255,255,0.5);
+    font-style: italic;
+  }
+  .error {
+    background: rgba(230,57,70,0.15);
+    border: 1px solid rgba(230,57,70,0.5);
+    color: #ffcfcf;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  img.emoji {
+    height: 1em;
+    width: 1em;
+    vertical-align: -0.15em;
+    margin: 0 0.05em;
+    display: inline-block;
+  }
+  .game-team-flag img.emoji,
+  .header-trophy img.emoji,
+  .card-icon img.emoji {
+    display: inline-block;
+    margin: 0;
+    vertical-align: middle;
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 540px) {
+    .header-title { font-size: 24px; }
+    .game-line {
+      grid-template-columns: 28px 1fr 60px 1fr;
+    }
+    .game-meta { display: none; }
+    .pred-table { font-size: 12px; }
+    .pred-table th, .pred-table td { padding: 7px 5px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-trophy">🏆</div>
+  <div class="header-title">BOLÃO COPA 2026</div>
+  <div class="header-sub">DASHBOARD · RANKING · PRÊMIOS</div>
+  <a href="./" class="header-link">← preencher palpites</a>
+</header>
+
+<main class="container">
+
+  <!-- KPI Cards -->
+  <section class="cards">
+    <div class="card">
+      <div class="card-icon">👥</div>
+      <div class="card-label">Participantes</div>
+      <div class="card-value" id="card-participants">—</div>
+      <div class="card-foot">inscrições pagas</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">💰</div>
+      <div class="card-label">Arrecadado</div>
+      <div class="card-value" id="card-arrecadado">—</div>
+      <div class="card-foot">R$ 50 × participantes</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏆</div>
+      <div class="card-label">Premiação total</div>
+      <div class="card-value" id="card-premios">—</div>
+      <div class="card-foot">90% do arrecadado</div>
+    </div>
+  </section>
+
+  <!-- Ranking -->
+  <section class="section">
+    <div class="section-title">RANKING</div>
+    <div id="ranking-container" class="loading">Carregando ranking…</div>
+  </section>
+
+  <!-- Resultados oficiais -->
+  <section class="section">
+    <div class="section-title">RESULTADOS OFICIAIS</div>
+    <div id="results-container" class="loading">Carregando resultados…</div>
+  </section>
+
+  <!-- Comparar palpites -->
+  <section class="section">
+    <div class="section-title">COMPARAR PALPITES</div>
+    <select id="participant-select" class="participant-selector">
+      <option value="">— Escolha um participante —</option>
+    </select>
+    <div id="participant-predictions"></div>
+  </section>
+
+</main>
+
+<!-- Twemoji -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
+
+<!-- Supabase + lógica -->
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL      = 'https://wyfmrfrsczcpbtwwpuhi.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5Zm1yZnJzY3pjcGJ0d3dwdWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDM1MTEsImV4cCI6MjA5MjkxOTUxMX0.E09hhpDEA6GlcPrc3GHXxTF9ZXmX6uXcYtqiMl_oCrg';
+
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ─── helpers ─────────────────────────────────────────────
+  const fmtBRL = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatDateBR = isoDate => {
+    if (!isoDate) return '';
+    const [y, m, d] = isoDate.split('-');
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${d}/${meses[parseInt(m,10) - 1]}`;
+  };
+  const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+
+  function parseEmojis(el) {
+    if (typeof twemoji !== 'undefined' && twemoji.parse) {
+      try { twemoji.parse(el || document.body, { folder: 'svg', ext: '.svg' }); }
+      catch (_) { try { twemoji.parse(el || document.body); } catch(__) {} }
+    }
+  }
+
+  function showError(containerId, msg) {
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = `<div class="error">⚠️ ${escapeHtml(msg)}</div>`;
+  }
+
+  // ─── KPI cards ───────────────────────────────────────────
+  async function loadCards() {
+    const { count, error } = await sb
+      .from('participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('pago', true);
+
+    if (error) {
+      console.error(error);
+      document.getElementById('card-participants').textContent = '!';
+      return;
+    }
+    const n = count || 0;
+    const arrecadado = n * 50;
+    const premios    = arrecadado * 0.9;
+    document.getElementById('card-participants').textContent = n;
+    document.getElementById('card-arrecadado').textContent   = fmtBRL(arrecadado);
+    document.getElementById('card-premios').textContent      = fmtBRL(premios);
+  }
+
+  // ─── Ranking ─────────────────────────────────────────────
+  async function loadRanking() {
+    const { data, error } = await sb
+      .from('ranking')
+      .select('*');
+
+    const container = document.getElementById('ranking-container');
+
+    if (error) {
+      console.error(error);
+      container.innerHTML = `<div class="error">⚠️ Erro ao carregar ranking: ${escapeHtml(error.message)}</div>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="empty">Nenhum participante cadastrado ainda.</div>`;
+      return;
+    }
+
+    const rows = data.map(r => {
+      const cls = r.pos <= 3 ? `podio-${r.pos}` : '';
+      const posClass = r.pos <= 3 ? `pos-${r.pos}` : '';
+      const premioCell = (Number(r.premio) || 0) > 0
+        ? `<span class="premio-cell">${fmtBRL(r.premio)}</span>`
+        : `<span class="premio-zero">—</span>`;
+      const nome = r.nome ? `${escapeHtml(r.nome)}` : escapeHtml(r.pront);
+      const sub  = r.nome ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;">${escapeHtml(r.pront)}</div>` : '';
+
+      return `
+        <tr class="${cls}">
+          <td class="center"><span class="pos-badge ${posClass}">${r.pos}º</span></td>
+          <td>${nome}${sub}</td>
+          <td class="center"><strong>${r.pontos}</strong></td>
+          <td class="right">${premioCell}</td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="ranking-wrap">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th class="center" style="width:60px;">Pos</th>
+              <th>Participante</th>
+              <th class="center" style="width:90px;">Pontos</th>
+              <th class="right" style="width:130px;">Prêmio</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    parseEmojis(container);
+  }
+
+  // ─── Resultados oficiais ─────────────────────────────────
+  async function loadResults() {
+    const [gamesRes, resultsRes] = await Promise.all([
+      sb.from('games').select('*').order('id'),
+      sb.from('official_results').select('*')
+    ]);
+
+    const container = document.getElementById('results-container');
+
+    if (gamesRes.error) {
+      container.innerHTML = `<div class="error">⚠️ Erro ao carregar jogos: ${escapeHtml(gamesRes.error.message)}</div>`;
+      return;
+    }
+
+    const games   = gamesRes.data || [];
+    const resMap  = {};
+    (resultsRes.data || []).forEach(r => { resMap[r.game_id] = r; });
+
+    if (games.length === 0) {
+      container.innerHTML = `<div class="empty">Nenhum jogo cadastrado. Rode o seed_games.sql.</div>`;
+      return;
+    }
+
+    const grupos = [...new Set(games.map(g => g.grupo))].sort();
+    const html = grupos.map(grupo => {
+      const gs = games.filter(g => g.grupo === grupo);
+      const lines = gs.map(g => {
+        const r = resMap[g.id];
+        const placar = r
+          ? `<div class="game-score">${r.gols_sel1} × ${r.gols_sel2}</div>`
+          : `<div class="game-score pending">— × —</div>`;
+        return `
+          <div class="game-line">
+            <div class="game-num">#${g.id}</div>
+            <div class="game-team-l">
+              <span class="game-team-code">${escapeHtml(g.code1)}</span>
+              <span class="game-team-flag">${g.flag1 || ''}</span>
+            </div>
+            ${placar}
+            <div class="game-team-r">
+              <span class="game-team-flag">${g.flag2 || ''}</span>
+              <span class="game-team-code">${escapeHtml(g.code2)}</span>
+            </div>
+            <div class="game-meta">${formatDateBR(g.dia)}<br>${(g.hora || '').slice(0,5)}</div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="group-block">
+          <div class="group-title">GRUPO ${escapeHtml(grupo)}</div>
+          ${lines}
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html;
+    parseEmojis(container);
+  }
+
+  // ─── Lista de participantes pro <select> ─────────────────
+  async function loadParticipantsList() {
+    const { data, error } = await sb
+      .from('participants')
+      .select('id, pront, nome')
+      .eq('pago', true)
+      .order('nome', { ascending: true, nullsFirst: false });
+
+    const select = document.getElementById('participant-select');
+    if (error) {
+      console.error(error);
+      return;
+    }
+    (data || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nome ? `${p.nome} (${p.pront})` : p.pront;
+      select.appendChild(opt);
+    });
+  }
+
+  // ─── Comparativo palpite × oficial ───────────────────────
+  async function loadPredictions(participantId) {
+    const target = document.getElementById('participant-predictions');
+    target.innerHTML = `<div class="loading">Carregando palpites…</div>`;
+
+    const [pRes, gamesRes, ppRes] = await Promise.all([
+      sb.from('participants').select('id, pront, nome').eq('id', participantId).single(),
+      sb.from('games').select('*').order('id'),
+      sb.from('prediction_points').select('*').eq('participant_id', participantId)
+    ]);
+
+    if (pRes.error || gamesRes.error || ppRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar palpites do participante.</div>`;
+      return;
+    }
+
+    const participant = pRes.data;
+    const games       = gamesRes.data || [];
+    const ppMap       = {};
+    (ppRes.data || []).forEach(p => { ppMap[p.game_id] = p; });
+
+    const totalPalpites = (ppRes.data || []).length;
+    const pontosTotal   = (ppRes.data || []).reduce((acc, p) => acc + (p.pontos || 0), 0);
+    const acertos5      = (ppRes.data || []).filter(p => p.pontos === 5).length;
+
+    const nome = participant.nome ? `${participant.nome} (${participant.pront})` : participant.pront;
+
+    const summary = `
+      <div class="pred-summary">
+        <div class="pred-summary-name">${escapeHtml(nome)}</div>
+        <div class="pred-summary-stats">
+          <div>Palpites<strong>${totalPalpites}/72</strong></div>
+          <div>Pontos<strong>${pontosTotal}</strong></div>
+          <div>Cravadas<strong>${acertos5}</strong></div>
+        </div>
+      </div>
+    `;
+
+    const rows = games.map(g => {
+      const pp = ppMap[g.id];
+      const palpiteCell = pp
+        ? `<span class="score-pill">${pp.palpite_sel1} × ${pp.palpite_sel2}</span>`
+        : `<span class="score-pill pending">— × —</span>`;
+      const oficialCell = (pp && pp.oficial_sel1 != null)
+        ? `<span class="score-pill">${pp.oficial_sel1} × ${pp.oficial_sel2}</span>`
+        : `<span class="score-pill pending">— × —</span>`;
+
+      let ptsCell;
+      if (!pp) {
+        ptsCell = `<span class="pts-badge pts-pending">—</span>`;
+      } else if (pp.pontos === null || pp.pontos === undefined) {
+        ptsCell = `<span class="pts-badge pts-pending">⏳</span>`;
+      } else {
+        ptsCell = `<span class="pts-badge pts-${pp.pontos}">${pp.pontos}</span>`;
+      }
+
+      return `
+        <tr>
+          <td>#${g.id}</td>
+          <td>${escapeHtml(g.grupo)}</td>
+          <td class="team-l">${escapeHtml(g.code1)} ${g.flag1 || ''}</td>
+          <td>${palpiteCell}</td>
+          <td>${oficialCell}</td>
+          <td class="team-r">${g.flag2 || ''} ${escapeHtml(g.code2)}</td>
+          <td>${ptsCell}</td>
+        </tr>
+      `;
+    }).join('');
+
+    target.innerHTML = `
+      ${summary}
+      <table class="pred-table">
+        <thead>
+          <tr>
+            <th>Jogo</th>
+            <th>G</th>
+            <th></th>
+            <th>Palpite</th>
+            <th>Oficial</th>
+            <th></th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    parseEmojis(target);
+  }
+
+  // ─── Init ────────────────────────────────────────────────
+  document.getElementById('participant-select').addEventListener('change', e => {
+    const id = e.target.value;
+    if (id) loadPredictions(id);
+    else document.getElementById('participant-predictions').innerHTML = '';
+  });
+
+  Promise.all([loadCards(), loadRanking(), loadResults(), loadParticipantsList()])
+    .then(() => parseEmojis(document.body))
+    .catch(err => console.error(err));
+
+  window.addEventListener('DOMContentLoaded', () => parseEmojis(document.body));
+</script>
+</body>
+</html>
