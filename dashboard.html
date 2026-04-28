@@ -595,7 +595,7 @@
     parseEmojis(container);
   }
 
-  // ─── Resultados oficiais ─────────────────────────────────
+  // ─── Resultados oficiais (somente jogos encerrados) ─────
   async function loadResults() {
     const [gamesRes, resultsRes] = await Promise.all([
       sb.from('games').select('*').order('id'),
@@ -609,23 +609,24 @@
       return;
     }
 
-    const games   = gamesRes.data || [];
-    const resMap  = {};
+    const games  = gamesRes.data || [];
+    const resMap = {};
     (resultsRes.data || []).forEach(r => { resMap[r.game_id] = r; });
 
-    if (games.length === 0) {
-      container.innerHTML = `<div class="empty">Nenhum jogo cadastrado. Rode o seed_games.sql.</div>`;
+    // Só os jogos com resultado oficial preenchido
+    const playedGames = games.filter(g => resMap[g.id]);
+    const totalEncerrados = playedGames.length;
+
+    if (totalEncerrados === 0) {
+      container.innerHTML = `<div class="empty">⏳ Nenhum jogo encerrado ainda. Os resultados aparecem aqui à medida que os jogos terminam.</div>`;
       return;
     }
 
-    const grupos = [...new Set(games.map(g => g.grupo))].sort();
+    const grupos = [...new Set(playedGames.map(g => g.grupo))].sort();
     const html = grupos.map(grupo => {
-      const gs = games.filter(g => g.grupo === grupo);
+      const gs = playedGames.filter(g => g.grupo === grupo);
       const lines = gs.map(g => {
         const r = resMap[g.id];
-        const placar = r
-          ? `<div class="game-score">${r.gols_sel1} × ${r.gols_sel2}</div>`
-          : `<div class="game-score pending">— × —</div>`;
         return `
           <div class="game-line">
             <div class="game-num">#${g.id}</div>
@@ -633,7 +634,7 @@
               <span class="game-team-code">${escapeHtml(g.code1)}</span>
               <span class="game-team-flag">${g.flag1 || ''}</span>
             </div>
-            ${placar}
+            <div class="game-score">${r.gols_sel1} × ${r.gols_sel2}</div>
             <div class="game-team-r">
               <span class="game-team-flag">${g.flag2 || ''}</span>
               <span class="game-team-code">${escapeHtml(g.code2)}</span>
@@ -651,7 +652,12 @@
       `;
     }).join('');
 
-    container.innerHTML = html;
+    container.innerHTML = `
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;letter-spacing:1px;">
+        ${totalEncerrados} jogo${totalEncerrados !== 1 ? 's' : ''} encerrado${totalEncerrados !== 1 ? 's' : ''} de 72
+      </div>
+      ${html}
+    `;
     parseEmojis(container);
   }
 
