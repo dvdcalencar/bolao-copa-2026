@@ -605,6 +605,68 @@
     font-size: 18px;
     letter-spacing: 1px;
   }
+
+  /* ─── CRAVADAS TABLE ─── */
+  .cravadas-summary {
+    background: linear-gradient(135deg, rgba(255,215,0,0.10), rgba(255,215,0,0.04));
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+  }
+  .cravadas-summary strong {
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    margin-right: 4px;
+  }
+  .cravadas-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .cravadas-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cravadas-table th {
+    background: rgba(255,215,0,0.1);
+    color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 10px 8px;
+    text-align: center;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255,215,0,0.25);
+    white-space: nowrap;
+  }
+  .cravadas-table td {
+    padding: 9px 8px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: var(--white);
+  }
+  .cravadas-table td.team-l { text-align: right; padding-right: 10px; font-weight: 600; }
+  .cravadas-table td.team-r { text-align: left;  padding-left: 10px;  font-weight: 600; }
+  .cravadas-table td.part-name { text-align: left; font-weight: 600; }
+  .cravadas-table .part-pront {
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .cravadas-table tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -676,6 +738,14 @@
       <option value="">— Escolha um participante —</option>
     </select>
     <div id="detalhe-content"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">CRAVADAS POR DATA</div>
+    <select id="cravadas-date-select" class="participant-selector">
+      <option value="">— Escolha uma data —</option>
+    </select>
+    <div id="cravadas-content"></div>
   </section>
 
 </div><!-- /tab-detalhe -->
@@ -782,7 +852,7 @@
           <thead>
             <tr>
               <th class="center" style="width:60px;">Pos</th>
-              <th>Participante</th>
+              <th class="center">Participante</th>
               <th class="center" style="width:90px;">Pontos</th>
               <th class="right" style="width:130px;">Prêmio</th>
             </tr>
@@ -1147,6 +1217,160 @@
     parseEmojis(target);
   }
 
+  // ─── CRAVADAS POR DATA ───────────────────────────────────
+  let _cravadasDatesLoaded = false;
+
+  async function loadCravadasDates() {
+    if (_cravadasDatesLoaded) return;
+
+    // Carrega jogos e oficiais; só lista datas que tenham AO MENOS um jogo encerrado
+    const [gamesRes, resRes] = await Promise.all([
+      sb.from('games').select('id, dia').order('dia'),
+      sb.from('official_results').select('game_id')
+    ]);
+    if (gamesRes.error || resRes.error) {
+      console.error(gamesRes.error || resRes.error);
+      return;
+    }
+    const completedIds = new Set((resRes.data || []).map(r => r.game_id));
+    const datasComJogo = [...new Set(
+      (gamesRes.data || [])
+        .filter(g => completedIds.has(g.id))
+        .map(g => g.dia)
+    )].sort();
+
+    const sel = document.getElementById('cravadas-date-select');
+    if (datasComJogo.length === 0) {
+      sel.innerHTML = `<option value="">— Sem jogos encerrados ainda —</option>`;
+      sel.disabled = true;
+    } else {
+      datasComJogo.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = formatDateBR(d) + ' · ' + d;
+        sel.appendChild(opt);
+      });
+    }
+    _cravadasDatesLoaded = true;
+  }
+
+  async function loadCravadasByDate(dia) {
+    const target = document.getElementById('cravadas-content');
+    target.innerHTML = `<div class="loading">Buscando cravadas…</div>`;
+
+    // Jogos da data com placar oficial
+    const [gamesRes, resRes] = await Promise.all([
+      sb.from('games').select('*').eq('dia', dia).order('id'),
+      sb.from('official_results').select('*')
+    ]);
+    if (gamesRes.error || resRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar jogos da data.</div>`;
+      return;
+    }
+
+    const games = gamesRes.data || [];
+    const resMap = {}; (resRes.data || []).forEach(r => { resMap[r.game_id] = r; });
+    const playedGames = games.filter(g => resMap[g.id]);
+
+    if (playedGames.length === 0) {
+      target.innerHTML = `<div class="empty">Nenhum jogo encerrado nesta data.</div>`;
+      return;
+    }
+
+    // Palpites desses jogos onde palpite == oficial (cravada = 5 pts)
+    const gameIds = playedGames.map(g => g.id);
+    const predsRes = await sb
+      .from('predictions')
+      .select('participant_id, game_id, gols_sel1, gols_sel2')
+      .in('game_id', gameIds);
+    if (predsRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar palpites.</div>`;
+      return;
+    }
+
+    const cravadas = (predsRes.data || []).filter(p => {
+      const r = resMap[p.game_id];
+      return r && p.gols_sel1 === r.gols_sel1 && p.gols_sel2 === r.gols_sel2;
+    });
+
+    // Participantes envolvidos (só pagos)
+    const partIds = [...new Set(cravadas.map(c => c.participant_id))];
+    let partMap = {};
+    if (partIds.length > 0) {
+      const partsRes = await sb
+        .from('participants')
+        .select('id, pront, nome')
+        .in('id', partIds)
+        .eq('pago', true);
+      (partsRes.data || []).forEach(p => { partMap[p.id] = p; });
+    }
+
+    // Filtra só cravadas de participantes pagos
+    const validCravadas = cravadas.filter(c => partMap[c.participant_id]);
+
+    const totalJogos = playedGames.length;
+    const totalCravadas = validCravadas.length;
+
+    if (validCravadas.length === 0) {
+      target.innerHTML = `
+        <div class="cravadas-summary">
+          <div><strong>${totalJogos}</strong> jogo${totalJogos!==1?'s':''} encerrado${totalJogos!==1?'s':''} em ${formatDateBR(dia)}</div>
+          <div class="empty" style="margin-top:10px;">Ninguém cravou o placar nessa data. 🎯</div>
+        </div>
+      `;
+      return;
+    }
+
+    // Ordena por jogo, depois por nome do participante
+    validCravadas.sort((a, b) => {
+      if (a.game_id !== b.game_id) return a.game_id - b.game_id;
+      const na = (partMap[a.participant_id].nome || partMap[a.participant_id].pront).toLowerCase();
+      const nb = (partMap[b.participant_id].nome || partMap[b.participant_id].pront).toLowerCase();
+      return na.localeCompare(nb);
+    });
+
+    const rows = validCravadas.map(c => {
+      const g = playedGames.find(x => x.id === c.game_id);
+      const r = resMap[c.game_id];
+      const part = partMap[c.participant_id];
+      const partName = part.nome ? `${escapeHtml(part.nome)} <span class="part-pront">(${escapeHtml(part.pront)})</span>` : escapeHtml(part.pront);
+      const trCls = isBrazilGame(g) ? 'is-brazil' : '';
+      return `
+        <tr class="${trCls}">
+          <td>#${g.id}</td>
+          <td class="team-l">${escapeHtml(g.code1)} ${g.flag1 || ''}</td>
+          <td><span class="score-pill">${c.gols_sel1} × ${c.gols_sel2}</span></td>
+          <td><span class="score-pill" style="background:var(--gold);color:var(--green-dark);">${r.gols_sel1} × ${r.gols_sel2}</span></td>
+          <td class="team-r">${g.flag2 || ''} ${escapeHtml(g.code2)}</td>
+          <td class="part-name">${partName}</td>
+        </tr>
+      `;
+    }).join('');
+
+    target.innerHTML = `
+      <div class="cravadas-summary">
+        <div><strong>${totalJogos}</strong> jogo${totalJogos!==1?'s':''} encerrado${totalJogos!==1?'s':''} em ${formatDateBR(dia)}</div>
+        <div><strong>${totalCravadas}</strong> cravada${totalCravadas!==1?'s':''} no total</div>
+      </div>
+      <div class="cravadas-wrap">
+        <table class="cravadas-table">
+          <thead>
+            <tr>
+              <th>Jogo</th>
+              <th>Seleção 1</th>
+              <th>Palpite</th>
+              <th>Oficial</th>
+              <th>Seleção 2</th>
+              <th>Participante</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    parseEmojis(target);
+  }
+
   // ─── Tab switching ───────────────────────────────────────
   function activateTab(tabName) {
     document.querySelectorAll('.nav-tab').forEach(t =>
@@ -1155,7 +1379,10 @@
       c.classList.toggle('active', c.id === `tab-${tabName}`));
 
     // Lazy load DETALHE
-    if (tabName === 'detalhe') loadDetalheParticipantsList();
+    if (tabName === 'detalhe') {
+      loadDetalheParticipantsList();
+      loadCravadasDates();
+    }
 
     // Volta o scroll pro topo ao trocar de aba
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1176,6 +1403,12 @@
     const id = e.target.value;
     if (id) loadDetalheTable(id);
     else document.getElementById('detalhe-content').innerHTML = '';
+  });
+
+  document.getElementById('cravadas-date-select').addEventListener('change', e => {
+    const dia = e.target.value;
+    if (dia) loadCravadasByDate(dia);
+    else document.getElementById('cravadas-content').innerHTML = '';
   });
 
   Promise.all([loadCards(), loadRanking(), loadResults(), loadParticipantsList()])
