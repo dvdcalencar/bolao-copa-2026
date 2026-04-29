@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Importar Palpites · Bolão Copa 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #FFD700;
+    --gold-dark: #C9A800;
+    --green-dark: #0d3d19;
+    --green-mid: #145224;
+    --white: #FAFAFA;
+    --red-accent: #e63946;
+    --green-ok: #5BC85B;
+    --orange-warn: #f4a261;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--green-dark);
+    color: var(--white);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: repeating-linear-gradient(180deg,
+      rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 60px,
+      transparent 60px, transparent 120px);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Header */
+  .app-header {
+    background: linear-gradient(135deg, var(--green-dark), var(--green-mid), #1e5e36);
+    padding: 22px 16px;
+    text-align: center;
+    border-bottom: 3px solid var(--gold);
+    position: relative; z-index: 1;
+  }
+  .header-icon { font-size: 30px; line-height: 1; }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; color: var(--gold);
+    letter-spacing: 3px;
+  }
+  .header-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; color: rgba(255,255,255,0.65);
+    letter-spacing: 4px; text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .header-link {
+    display: inline-block; margin-top: 12px;
+    padding: 6px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; color: var(--gold);
+    text-decoration: none;
+    border: 1px solid rgba(255,215,0,0.5);
+    border-radius: 20px; letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .header-link:hover { background: rgba(255,215,0,0.1); }
+
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 24px 14px;
+    position: relative; z-index: 1;
+  }
+
+  /* Section title */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid rgba(255,215,0,0.25);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section { margin-bottom: 28px; }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 2px dashed rgba(255,215,0,0.4);
+    border-radius: 14px;
+    padding: 36px 20px;
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .drop-zone.dragging {
+    border-color: var(--gold);
+    background: rgba(255,215,0,0.1);
+    transform: scale(1.01);
+  }
+  .drop-zone-icon { font-size: 42px; margin-bottom: 8px; }
+  .drop-zone-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; color: var(--gold);
+    letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .drop-zone-sub {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+  }
+  #file-input { display: none; }
+
+  /* File list */
+  .file-list { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .file-item {
+    display: flex; align-items: center;
+    gap: 12px; padding: 12px 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border-left: 4px solid rgba(255,255,255,0.2);
+  }
+  .file-item.ok    { border-left-color: var(--green-ok); }
+  .file-item.warn  { border-left-color: var(--orange-warn); }
+  .file-item.error { border-left-color: var(--red-accent); }
+  .file-icon { font-size: 22px; }
+  .file-info { flex: 1; min-width: 0; }
+  .file-name {
+    font-weight: 600; font-size: 14px;
+    color: var(--white);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .file-meta {
+    font-size: 12px; color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+  .file-pront {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold);
+  }
+  .file-remove {
+    background: rgba(255,255,255,0.1);
+    border: none; color: rgba(255,255,255,0.7);
+    width: 26px; height: 26px;
+    border-radius: 50%; cursor: pointer;
+    font-size: 14px;
+  }
+  .file-remove:hover { background: rgba(230,57,70,0.5); color: #fff; }
+
+  /* Action buttons */
+  .actions {
+    display: flex; gap: 10px;
+    flex-wrap: wrap; margin-top: 16px;
+  }
+  .btn {
+    flex: 1; min-width: 140px;
+    padding: 14px 18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 2px;
+    border: none; border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--gold), #e6c200);
+    color: var(--green-dark);
+  }
+  .btn.secondary {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  /* SQL output */
+  .sql-output {
+    width: 100%;
+    min-height: 240px;
+    padding: 14px;
+    background: #0a2510;
+    color: #C9E8C9;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 10px;
+    resize: vertical;
+    white-space: pre;
+    overflow: auto;
+  }
+  .sql-output:focus { outline: none; border-color: var(--gold); }
+  .sql-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255,255,255,0.4);
+    font-style: italic;
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 10px;
+  }
+  .sql-stats {
+    display: flex; gap: 18px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: rgba(255,215,0,0.08);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .sql-stats strong {
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    margin-right: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 80px; left: 50%;
+    transform: translateX(-50%) translateY(-30px);
+    background: #222; color: #fff;
+    padding: 12px 22px; border-radius: 24px;
+    font-size: 14px; font-weight: 500;
+    opacity: 0; transition: opacity 0.3s, transform 0.3s;
+    z-index: 999; pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Help section */
+  .help {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.8);
+  }
+  .help strong { color: var(--gold); }
+  .help code {
+    background: rgba(0,0,0,0.4);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+  }
+
+  .loading {
+    text-align: center; padding: 30px;
+    color: rgba(255,255,255,0.5);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-icon">⚙️</div>
+  <div class="header-title">ADMIN · IMPORTAR PALPITES</div>
+  <div class="header-sub">CSV → SQL → SUPABASE</div>
+  <a href="./" class="header-link">← bolão público</a>
+  <a href="./dashboard.html" class="header-link">dashboard →</a>
+</header>
+
+<main class="container">
+
+  <!-- HELP -->
+  <section class="section">
+    <div class="help">
+      <strong>Como funciona:</strong> arraste os arquivos <code>.csv</code> dos palpites que recebeu pelo WhatsApp.
+      A página lê cada CSV, identifica o participante pelo campo <code>User</code> (PRONT-NOME) e cruza com a tabela
+      <code>participants</code> do Supabase. Só monta SQL pra participantes que <strong>já estão cadastrados como pagos</strong>
+      — quem não está, é ignorado (com aviso). Depois você copia o SQL gerado e cola no <strong>SQL Editor</strong> do Supabase.
+    </div>
+  </section>
+
+  <!-- DROP ZONE -->
+  <section class="section">
+    <div class="section-title">📥 Arquivos CSV</div>
+
+    <div class="drop-zone" id="drop-zone">
+      <div class="drop-zone-icon">📁</div>
+      <div class="drop-zone-title">Arraste os CSVs aqui</div>
+      <div class="drop-zone-sub">ou clique pra selecionar · pode soltar vários de uma vez</div>
+      <input type="file" id="file-input" accept=".csv,text/csv" multiple>
+    </div>
+
+    <div class="file-list" id="file-list"></div>
+
+    <div class="actions" id="actions" style="display:none;">
+      <button class="btn primary" id="btn-generate">📜 Gerar SQL</button>
+      <button class="btn secondary" id="btn-clear">🗑 Limpar lista</button>
+    </div>
+  </section>
+
+  <!-- SQL OUTPUT -->
+  <section class="section" id="output-section" style="display:none;">
+    <div class="section-title">📋 SQL gerado</div>
+    <div class="sql-stats" id="sql-stats"></div>
+    <textarea class="sql-output" id="sql-output" readonly></textarea>
+    <div class="actions" style="margin-top: 10px;">
+      <button class="btn primary" id="btn-copy">📋 Copiar tudo</button>
+      <button class="btn secondary" id="btn-open-supabase">🔗 Abrir SQL Editor do Supabase</button>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL      = 'https://wyfmrfrsczcpbtwwpuhi.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5Zm1yZnJzY3pjcGJ0d3dwdWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNDM1MTEsImV4cCI6MjA5MjkxOTUxMX0.E09hhpDEA6GlcPrc3GHXxTF9ZXmX6uXcYtqiMl_oCrg';
+  const SUPABASE_SQL_EDITOR_URL = 'https://supabase.com/dashboard/project/wyfmrfrsczcpbtwwpuhi/sql/new';
+
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ─── State ──────────────────────────────────────────
+  let participantsByPront = {};   // {pront upper → uuid}
+  let gamesByIdConf       = {};   // {"MEXAFS" → 1}
+  let parsedFiles         = [];   // [{name, user, rows, status, error?}]
+
+  // ─── Helpers ────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+
+  function showToast(msg, dur = 2200) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  function escapeSQL(v) {
+    return String(v).replace(/'/g, "''");
+  }
+
+  // ─── Load reference data ────────────────────────────
+  async function loadReferenceData() {
+    const [pRes, gRes] = await Promise.all([
+      sb.from('participants').select('id, pront, nome').eq('pago', true),
+      sb.from('games').select('id, code1, code2')
+    ]);
+
+    if (pRes.error || gRes.error) {
+      console.error(pRes.error, gRes.error);
+      showToast('⚠️ Erro ao buscar dados do Supabase. Veja o console.', 4000);
+      return false;
+    }
+
+    (pRes.data || []).forEach(p => {
+      participantsByPront[String(p.pront).toUpperCase().trim()] = p;
+    });
+    (gRes.data || []).forEach(g => {
+      gamesByIdConf[g.code1 + g.code2] = g.id;
+    });
+    return true;
+  }
+
+  // ─── CSV parsing ────────────────────────────────────
+  function parseCSV(file) {
+    return new Promise(resolve => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: h => h.trim(),
+        complete: result => resolve(result),
+        error: err => resolve({ data: [], errors: [err] })
+      });
+    });
+  }
+
+  function processFile(file, parseResult) {
+    const rows = (parseResult.data || []);
+    const fileObj = { name: file.name, rows, status: 'unknown', user: null, participant: null, validRows: [], errors: [] };
+
+    if (rows.length === 0) {
+      fileObj.status = 'error';
+      fileObj.errors.push('CSV vazio ou sem linhas válidas.');
+      return fileObj;
+    }
+
+    // Detect User from first row (assume same in all rows)
+    const userRaw = rows[0]?.User || rows[0]?.user || '';
+    fileObj.user = String(userRaw).toUpperCase().trim();
+
+    if (!fileObj.user) {
+      fileObj.status = 'error';
+      fileObj.errors.push('Coluna "User" não encontrada ou vazia.');
+      return fileObj;
+    }
+
+    // Match participant
+    const p = participantsByPront[fileObj.user];
+    if (!p) {
+      fileObj.status = 'error';
+      fileObj.errors.push(`Participante "${fileObj.user}" não está cadastrado em participants (ou está marcado como pago=false).`);
+      return fileObj;
+    }
+    fileObj.participant = p;
+
+    // Validate each row
+    rows.forEach((r, idx) => {
+      const idConf = (r.IdConf || r.idconf || '').trim();
+      const g1 = String(r.GolsSelecao1 ?? '').trim();
+      const g2 = String(r.GolsSelecao2 ?? '').trim();
+
+      if (g1 === '' || g2 === '') return; // empty palpite, skip silently
+
+      const gameId = gamesByIdConf[idConf];
+      if (!gameId) {
+        fileObj.errors.push(`Linha ${idx+2}: IdConf "${idConf}" desconhecido — ignorada.`);
+        return;
+      }
+      const n1 = parseInt(g1, 10);
+      const n2 = parseInt(g2, 10);
+      if (isNaN(n1) || isNaN(n2) || n1 < 0 || n2 < 0 || n1 > 99 || n2 > 99) {
+        fileObj.errors.push(`Linha ${idx+2}: gols inválidos (${g1} × ${g2}) — ignorada.`);
+        return;
+      }
+
+      fileObj.validRows.push({ game_id: gameId, gols_sel1: n1, gols_sel2: n2 });
+    });
+
+    if (fileObj.validRows.length === 0) {
+      fileObj.status = 'error';
+      fileObj.errors.push('Nenhum palpite válido encontrado.');
+    } else if (fileObj.errors.length > 0 || fileObj.validRows.length < 72) {
+      fileObj.status = 'warn';
+    } else {
+      fileObj.status = 'ok';
+    }
+    return fileObj;
+  }
+
+  // ─── Render file list ───────────────────────────────
+  function renderFileList() {
+    const list = $('file-list');
+    list.innerHTML = parsedFiles.map((f, idx) => {
+      const icon = f.status === 'ok' ? '✅' : f.status === 'warn' ? '⚠️' : '❌';
+      let detail;
+      if (f.status === 'error') {
+        detail = f.errors[0] || 'Erro';
+      } else {
+        const nome = f.participant?.nome ? ` (${f.participant.nome})` : '';
+        const total = f.validRows.length;
+        const extra = f.errors.length > 0 ? ` · ⚠️ ${f.errors.length} aviso${f.errors.length>1?'s':''}` : '';
+        detail = `<span class="file-pront">${f.user}</span>${nome} · ${total}/72 palpites${extra}`;
+      }
+      return `
+        <div class="file-item ${f.status}">
+          <div class="file-icon">${icon}</div>
+          <div class="file-info">
+            <div class="file-name">${f.name}</div>
+            <div class="file-meta">${detail}</div>
+          </div>
+          <button class="file-remove" data-idx="${idx}" title="Remover">✕</button>
+        </div>
+      `;
+    }).join('');
+
+    list.querySelectorAll('.file-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        parsedFiles.splice(parseInt(btn.dataset.idx), 1);
+        renderFileList();
+        toggleActions();
+      });
+    });
+
+    toggleActions();
+  }
+
+  function toggleActions() {
+    $('actions').style.display = parsedFiles.length > 0 ? 'flex' : 'none';
+    const ok = parsedFiles.some(f => f.status !== 'error');
+    $('btn-generate').disabled = !ok;
+  }
+
+  // ─── Generate SQL ───────────────────────────────────
+  function generateSQL() {
+    const importable = parsedFiles.filter(f => f.status !== 'error');
+    if (importable.length === 0) {
+      showToast('Nenhum arquivo importável.');
+      return;
+    }
+
+    const blocks = importable.map(f => {
+      const values = f.validRows.map(r =>
+        `  ('${f.participant.id}', ${r.game_id}, ${r.gols_sel1}, ${r.gols_sel2})`
+      ).join(',\n');
+      const nome = f.participant.nome ? ` (${escapeSQL(f.participant.nome)})` : '';
+      return `-- ${f.name} → ${f.user}${nome} · ${f.validRows.length} palpites
+INSERT INTO predictions (participant_id, game_id, gols_sel1, gols_sel2) VALUES
+${values}
+ON CONFLICT (participant_id, game_id) DO UPDATE SET
+  gols_sel1  = EXCLUDED.gols_sel1,
+  gols_sel2  = EXCLUDED.gols_sel2,
+  updated_at = now();`;
+    });
+
+    const totalRows = importable.reduce((s, f) => s + f.validRows.length, 0);
+    const sql = blocks.join('\n\n') + '\n';
+
+    $('sql-output').value = sql;
+    $('sql-stats').innerHTML = `
+      <div><strong>${importable.length}</strong>arquivo${importable.length>1?'s':''} importável${importable.length>1?'is':''}</div>
+      <div><strong>${totalRows}</strong>palpite${totalRows>1?'s':''} ao todo</div>
+      <div><strong>${parsedFiles.length - importable.length}</strong>arquivo${(parsedFiles.length - importable.length)!==1?'s':''} ignorado${(parsedFiles.length - importable.length)!==1?'s':''}</div>
+    `;
+    $('output-section').style.display = 'block';
+    $('output-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ─── File handling ──────────────────────────────────
+  async function handleFiles(fileList) {
+    const arr = Array.from(fileList).filter(f => /\.csv$/i.test(f.name));
+    if (arr.length === 0) {
+      showToast('Nenhum CSV encontrado nos arquivos arrastados.');
+      return;
+    }
+    showToast(`Lendo ${arr.length} arquivo${arr.length>1?'s':''}…`);
+
+    for (const file of arr) {
+      const result = await parseCSV(file);
+      const fileObj = processFile(file, result);
+      // Avoid duplicates (same filename)
+      const existingIdx = parsedFiles.findIndex(f => f.name === fileObj.name);
+      if (existingIdx >= 0) parsedFiles.splice(existingIdx, 1, fileObj);
+      else parsedFiles.push(fileObj);
+    }
+    renderFileList();
+  }
+
+  // ─── Drop zone events ───────────────────────────────
+  const dz = $('drop-zone');
+  const fi = $('file-input');
+
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragging'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragging'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dragging');
+    handleFiles(e.dataTransfer.files);
+  });
+  fi.addEventListener('change', () => handleFiles(fi.files));
+
+  // ─── Action buttons ────────────────────────────────
+  $('btn-generate').addEventListener('click', generateSQL);
+  $('btn-clear').addEventListener('click', () => {
+    parsedFiles = [];
+    renderFileList();
+    $('output-section').style.display = 'none';
+  });
+  $('btn-copy').addEventListener('click', async () => {
+    const ta = $('sql-output');
+    try {
+      await navigator.clipboard.writeText(ta.value);
+      showToast('✅ SQL copiado!');
+    } catch (e) {
+      ta.select();
+      document.execCommand('copy');
+      showToast('✅ SQL copiado!');
+    }
+  });
+  $('btn-open-supabase').addEventListener('click', () => {
+    window.open(SUPABASE_SQL_EDITOR_URL, '_blank');
+  });
+
+  // ─── Init ──────────────────────────────────────────
+  (async () => {
+    const ok = await loadReferenceData();
+    if (ok) {
+      const n = Object.keys(participantsByPront).length;
+      const g = Object.keys(gamesByIdConf).length;
+      showToast(`✅ ${n} participante${n!==1?'s':''} e ${g} jogos carregados`);
+    }
+  })();
+</script>
+</body>
+</html>
