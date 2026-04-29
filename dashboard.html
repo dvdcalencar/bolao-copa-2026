@@ -425,6 +425,185 @@
     .game-meta { display: none; }
     .pred-table { font-size: 12px; }
     .pred-table th, .pred-table td { padding: 7px 5px; }
+    .nav-tab { font-size: 14px; padding: 9px 10px; letter-spacing: 1px; }
+  }
+
+  /* ─── NAV TABS (sticky no topo) ─── */
+  .nav-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    display: flex;
+    gap: 6px;
+    background: linear-gradient(180deg, var(--green-dark) 0%, #0a2510 100%);
+    padding: 10px 12px;
+    border-bottom: 2px solid rgba(255,215,0,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .nav-tab {
+    flex: 1;
+    padding: 11px 14px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 17px;
+    letter-spacing: 2.5px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-transform: uppercase;
+  }
+  .nav-tab:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); }
+  .nav-tab.active {
+    background: linear-gradient(135deg, var(--gold), #e6c200);
+    color: var(--green-dark);
+    border-color: var(--gold);
+    box-shadow: 0 2px 12px rgba(255,215,0,0.3);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ─── DESTAQUE BRASIL ─── */
+  :root {
+    --brazil-green: #009C3B;
+    --brazil-yellow: #FFDF00;
+  }
+  .is-brazil {
+    background: linear-gradient(90deg,
+      rgba(0,156,59,0.18) 0%,
+      rgba(255,223,0,0.10) 50%,
+      transparent 100%) !important;
+    border-left: 3px solid var(--brazil-green) !important;
+    position: relative;
+  }
+  .is-brazil .game-num,
+  .is-brazil td:first-child {
+    font-weight: 700;
+    color: var(--brazil-yellow) !important;
+  }
+  /* tr da pred-table tem padding/borders próprios — aplicar sutilmente */
+  tr.is-brazil td {
+    background: linear-gradient(90deg,
+      rgba(0,156,59,0.18) 0%,
+      rgba(255,223,0,0.10) 50%,
+      transparent 100%);
+    border-left: none;
+  }
+  tr.is-brazil td:first-child {
+    border-left: 3px solid var(--brazil-green);
+    color: var(--brazil-yellow);
+    font-weight: 700;
+  }
+
+  /* ─── DETALHE TABLE ─── */
+  .detalhe-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detalhe-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .detalhe-table th {
+    background: rgba(255,215,0,0.1);
+    color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 10px 6px;
+    text-align: center;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255,215,0,0.25);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .detalhe-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: var(--white);
+    white-space: nowrap;
+  }
+  .detalhe-table td.team-l { text-align: right; padding-right: 8px; font-weight: 600; }
+  .detalhe-table td.team-r { text-align: left;  padding-left: 8px;  font-weight: 600; }
+  .detalhe-table tr:last-child td { border-bottom: none; }
+
+  /* Linha em destaque: 5 pontos (placar exato) */
+  .detalhe-table tr.placar-cheio td {
+    background: linear-gradient(90deg, rgba(255,215,0,0.20), rgba(255,215,0,0.06)) !important;
+    font-weight: 600;
+  }
+  .detalhe-table tr.placar-cheio td.col-pts {
+    background: var(--gold) !important;
+    color: var(--green-dark);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+  }
+
+  /* Brasil + Placar Cheio: combinar destaques (verde + dourado) */
+  .detalhe-table tr.is-brazil.placar-cheio td {
+    background: linear-gradient(90deg,
+      rgba(0,156,59,0.22) 0%,
+      rgba(255,223,0,0.20) 50%,
+      rgba(255,215,0,0.10) 100%) !important;
+  }
+
+  .pts-pill {
+    display: inline-block;
+    min-width: 22px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+  .pts-pill.zero  { color: rgba(255,255,255,0.18); background: transparent; }
+  .pts-pill.has-1 { background: #B98643; color: #fff; }
+  .pts-pill.has-2 { background: #4A9DDB; color: #fff; }
+  .pts-pill.has-3 { background: #5BC85B; color: #fff; }
+  .pts-pill.has-5 { background: var(--gold); color: var(--green-dark); }
+  .col-pts { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--gold); }
+
+  .detalhe-summary {
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04));
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .detalhe-summary-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .detalhe-summary-stats {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+  }
+  .detalhe-summary-stats strong {
+    display: block;
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
   }
 </style>
 </head>
@@ -434,10 +613,15 @@
   <div class="header-trophy">🏆</div>
   <div class="header-title">BOLÃO COPA 2026</div>
   <div class="header-sub">DASHBOARD · RANKING · PRÊMIOS</div>
-  <a href="./" class="header-link">← preencher palpites</a>
 </header>
 
+<nav class="nav-tabs">
+  <button class="nav-tab active" data-tab="principal" type="button">Principal</button>
+  <button class="nav-tab" data-tab="detalhe" type="button">Detalhe</button>
+</nav>
+
 <main class="container">
+<div id="tab-principal" class="tab-content active">
 
   <!-- KPI Cards -->
   <section class="cards">
@@ -482,6 +666,20 @@
     <div id="participant-predictions"></div>
   </section>
 
+</div><!-- /tab-principal -->
+
+<div id="tab-detalhe" class="tab-content">
+
+  <section class="section">
+    <div class="section-title">DETALHE DOS PONTOS</div>
+    <select id="detalhe-select" class="participant-selector">
+      <option value="">— Escolha um participante —</option>
+    </select>
+    <div id="detalhe-content"></div>
+  </section>
+
+</div><!-- /tab-detalhe -->
+
 </main>
 
 <!-- Twemoji -->
@@ -507,6 +705,7 @@
   const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
   }[c]));
+  const isBrazilGame = g => g && (g.code1 === 'BRA' || g.code2 === 'BRA');
 
   function parseEmojis(el) {
     if (typeof twemoji !== 'undefined' && twemoji.parse) {
@@ -627,8 +826,9 @@
       const gs = playedGames.filter(g => g.grupo === grupo);
       const lines = gs.map(g => {
         const r = resMap[g.id];
+        const brClass = isBrazilGame(g) ? ' is-brazil' : '';
         return `
-          <div class="game-line">
+          <div class="game-line${brClass}">
             <div class="game-num">#${g.id}</div>
             <div class="game-team-l">
               <span class="game-team-code">${escapeHtml(g.code1)}</span>
@@ -738,8 +938,9 @@
         ptsCell = `<span class="pts-badge pts-${pp.pontos}">${pp.pontos}</span>`;
       }
 
+      const brClass = isBrazilGame(g) ? ' is-brazil' : '';
       return `
-        <tr>
+        <tr class="${brClass.trim()}">
           <td>#${g.id}</td>
           <td>${escapeHtml(g.grupo)}</td>
           <td class="team-l">${escapeHtml(g.code1)} ${g.flag1 || ''}</td>
@@ -771,11 +972,210 @@
     parseEmojis(target);
   }
 
+  // ─── DETALHE ─────────────────────────────────────────────
+  // Decompõe a pontuação do palpite vs oficial em colunas independentes
+  // que somadas reproduzem a regra original (5/3/2/2/1).
+  function computeBreakdown(p1, p2, o1, o2) {
+    if (o1 == null || o2 == null) return null;  // jogo não encerrado
+
+    const sel1Ok    = p1 === o1;
+    const sel2Ok    = p2 === o2;
+    const exato     = sel1Ok && sel2Ok;
+    const palVenc   = p1 > p2 ? 1 : (p1 < p2 ? 2 : 0);
+    const ofVenc    = o1 > o2 ? 1 : (o1 < o2 ? 2 : 0);
+    const venceuOk  = palVenc !== 0 && palVenc === ofVenc;
+    const empatou   = palVenc === 0 && ofVenc === 0;
+
+    let placar=0, pl1Sv=0, pl2Sv=0, vit=0, vitPl=0, emp=0;
+    if (exato) {
+      placar = 5;
+    } else if (venceuOk) {
+      if (sel1Ok || sel2Ok) vitPl = 3;  // vencedor + 1 placar
+      else                  vit   = 2;  // só vencedor
+    } else if (empatou) {
+      emp = 2;                          // empate não exato
+    } else {
+      if (sel1Ok) pl1Sv = 1;
+      if (sel2Ok) pl2Sv = 1;
+    }
+    const total = placar + pl1Sv + pl2Sv + vit + vitPl + emp;
+    return { placar, pl1Sv, pl2Sv, vit, vitPl, emp, total };
+  }
+
+  function pillCell(value, points) {
+    if (value === 0) return `<span class="pts-pill zero">—</span>`;
+    return `<span class="pts-pill has-${points}">${value}</span>`;
+  }
+
+  let _detalheParticipantsLoaded = false;
+  let _detalheGames = null;
+
+  async function loadDetalheParticipantsList() {
+    if (_detalheParticipantsLoaded) return;
+    const { data, error } = await sb
+      .from('participants')
+      .select('id, pront, nome')
+      .eq('pago', true)
+      .order('nome', { ascending: true, nullsFirst: false });
+    if (error) { console.error(error); return; }
+    const sel = document.getElementById('detalhe-select');
+    (data || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nome ? `${p.nome} (${p.pront})` : p.pront;
+      sel.appendChild(opt);
+    });
+    _detalheParticipantsLoaded = true;
+  }
+
+  async function loadDetalheTable(participantId) {
+    const target = document.getElementById('detalhe-content');
+    target.innerHTML = `<div class="loading">Calculando detalhes…</div>`;
+
+    // Cache de jogos pra reaproveitar entre seleções
+    if (!_detalheGames) {
+      const r = await sb.from('games').select('*').order('id');
+      if (r.error) { target.innerHTML = `<div class="error">⚠️ ${escapeHtml(r.error.message)}</div>`; return; }
+      _detalheGames = r.data || [];
+    }
+
+    const [partRes, predsRes, resultsRes] = await Promise.all([
+      sb.from('participants').select('id, pront, nome').eq('id', participantId).single(),
+      sb.from('predictions').select('game_id, gols_sel1, gols_sel2').eq('participant_id', participantId),
+      sb.from('official_results').select('*')
+    ]);
+
+    if (partRes.error || predsRes.error || resultsRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar dados.</div>`;
+      return;
+    }
+
+    const participant = partRes.data;
+    const predsMap   = {}; (predsRes.data   || []).forEach(p => { predsMap[p.game_id]   = p; });
+    const resultsMap = {}; (resultsRes.data || []).forEach(r => { resultsMap[r.game_id] = r; });
+
+    let totalPts = 0, totalCravadas = 0, jogosEncerrados = 0, palpitesFeitos = 0;
+    const rows = _detalheGames.map(g => {
+      const p = predsMap[g.id];
+      const r = resultsMap[g.id];
+      const palpiteCell = p
+        ? `<span class="score-pill">${p.gols_sel1} × ${p.gols_sel2}</span>`
+        : `<span class="score-pill pending">— × —</span>`;
+      const oficialCell = r
+        ? `<span class="score-pill">${r.gols_sel1} × ${r.gols_sel2}</span>`
+        : `<span class="score-pill pending">— × —</span>`;
+
+      let bk = null;
+      if (p && r) bk = computeBreakdown(p.gols_sel1, p.gols_sel2, r.gols_sel1, r.gols_sel2);
+
+      if (p) palpitesFeitos++;
+      if (r) jogosEncerrados++;
+      if (bk) {
+        totalPts += bk.total;
+        if (bk.placar === 5) totalCravadas++;
+      }
+
+      const cravada = bk && bk.placar === 5;
+      const trClasses = [];
+      if (isBrazilGame(g)) trClasses.push('is-brazil');
+      if (cravada)         trClasses.push('placar-cheio');
+
+      const cells = bk ? [
+        pillCell(bk.placar, 5),
+        pillCell(bk.pl1Sv,  1),
+        pillCell(bk.pl2Sv,  1),
+        pillCell(bk.vit,    2),
+        pillCell(bk.vitPl,  3),
+        pillCell(bk.emp,    2),
+      ] : Array(6).fill('<span class="pts-pill zero">—</span>');
+
+      const ptsTotal = bk ? bk.total : '—';
+
+      return `
+        <tr class="${trClasses.join(' ')}">
+          <td>#${g.id}</td>
+          <td>${formatDateBR(g.dia)}</td>
+          <td class="team-l">${escapeHtml(g.code1)} ${g.flag1 || ''}</td>
+          <td>${palpiteCell}</td>
+          <td>${oficialCell}</td>
+          <td class="team-r">${g.flag2 || ''} ${escapeHtml(g.code2)}</td>
+          <td>${cells[0]}</td>
+          <td>${cells[1]}</td>
+          <td>${cells[2]}</td>
+          <td>${cells[3]}</td>
+          <td>${cells[4]}</td>
+          <td>${cells[5]}</td>
+          <td class="col-pts">${ptsTotal}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const nome = participant.nome ? `${participant.nome} (${participant.pront})` : participant.pront;
+    target.innerHTML = `
+      <div class="detalhe-summary">
+        <div class="detalhe-summary-name">${escapeHtml(nome)}</div>
+        <div class="detalhe-summary-stats">
+          <div>Pontos<strong>${totalPts}</strong></div>
+          <div>Cravadas<strong>${totalCravadas}</strong></div>
+          <div>Encerrados<strong>${jogosEncerrados}/72</strong></div>
+          <div>Palpites<strong>${palpitesFeitos}/72</strong></div>
+        </div>
+      </div>
+      <div class="detalhe-wrap">
+        <table class="detalhe-table">
+          <thead>
+            <tr>
+              <th>Jogo</th>
+              <th>Data</th>
+              <th>Seleção 1</th>
+              <th>Palpite</th>
+              <th>Oficial</th>
+              <th>Seleção 2</th>
+              <th title="Placar exato (5)">Placar</th>
+              <th title="Placar 1 sem vitória (1)">Pl1 S/V</th>
+              <th title="Placar 2 sem vitória (1)">Pl2 S/V</th>
+              <th title="Só vencedor (2)">Vitória</th>
+              <th title="Vencedor + 1 placar (3)">Vit+Pl</th>
+              <th title="Empate não exato (2)">Empate</th>
+              <th>Pontos</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    parseEmojis(target);
+  }
+
+  // ─── Tab switching ───────────────────────────────────────
+  function activateTab(tabName) {
+    document.querySelectorAll('.nav-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tabName));
+    document.querySelectorAll('.tab-content').forEach(c =>
+      c.classList.toggle('active', c.id === `tab-${tabName}`));
+
+    // Lazy load DETALHE
+    if (tabName === 'detalhe') loadDetalheParticipantsList();
+
+    // Volta o scroll pro topo ao trocar de aba
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+  });
+
   // ─── Init ────────────────────────────────────────────────
   document.getElementById('participant-select').addEventListener('change', e => {
     const id = e.target.value;
     if (id) loadPredictions(id);
     else document.getElementById('participant-predictions').innerHTML = '';
+  });
+
+  document.getElementById('detalhe-select').addEventListener('change', e => {
+    const id = e.target.value;
+    if (id) loadDetalheTable(id);
+    else document.getElementById('detalhe-content').innerHTML = '';
   });
 
   Promise.all([loadCards(), loadRanking(), loadResults(), loadParticipantsList()])
