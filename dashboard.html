@@ -1343,6 +1343,7 @@
           <td><span class="score-pill" style="background:var(--gold);color:var(--green-dark);">${r.gols_sel1} × ${r.gols_sel2}</span></td>
           <td class="team-r">${g.flag2 || ''} ${escapeHtml(g.code2)}</td>
           <td class="part-name">${partName}</td>
+          <td><span class="pts-pill has-5">5</span></td>
         </tr>
       `;
     }).join('');
@@ -1362,6 +1363,7 @@
               <th>Oficial</th>
               <th>Seleção 2</th>
               <th>Participante</th>
+              <th>Pontos</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
