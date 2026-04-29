@@ -667,6 +667,127 @@
     margin-left: 4px;
   }
   .cravadas-table tr:last-child td { border-bottom: none; }
+
+  /* ─── COMPARATIVO ─── */
+  .comp-selectors {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+  .comp-selector-wrap { min-width: 0; }
+  .comp-selector-label {
+    display: block;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    padding-left: 4px;
+  }
+  .comp-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--gold);
+    padding-bottom: 10px;
+    text-align: center;
+  }
+
+  .comp-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .comp-card {
+    background: linear-gradient(135deg, rgba(255,215,0,0.10), rgba(255,215,0,0.03));
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .comp-card-who {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .comp-card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 17px;
+    color: var(--gold);
+    letter-spacing: 1.5px;
+    margin: 2px 0 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .comp-card-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .comp-card-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .comp-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .comp-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .comp-table th {
+    background: rgba(255,215,0,0.1);
+    color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 10px 8px;
+    text-align: center;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(255,215,0,0.25);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 8px 8px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: var(--white);
+  }
+  .comp-table td.team-l { text-align: right; padding-right: 10px; font-weight: 600; }
+  .comp-table td.team-r { text-align: left;  padding-left: 10px;  font-weight: 600; }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr.placar-cheio td {
+    background: linear-gradient(90deg, rgba(255,215,0,0.18), rgba(255,215,0,0.06)) !important;
+  }
+  .comp-pal-equal {
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
+  }
+
+  @media (max-width: 540px) {
+    .comp-selectors {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .comp-vs { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -678,8 +799,9 @@
 </header>
 
 <nav class="nav-tabs">
-  <button class="nav-tab active" data-tab="principal" type="button">Principal</button>
-  <button class="nav-tab" data-tab="detalhe" type="button">Detalhe</button>
+  <button class="nav-tab active" data-tab="principal"   type="button">Principal</button>
+  <button class="nav-tab"        data-tab="detalhe"     type="button">Detalhe</button>
+  <button class="nav-tab"        data-tab="comparativo" type="button">Comparativo</button>
 </nav>
 
 <main class="container">
@@ -749,6 +871,32 @@
   </section>
 
 </div><!-- /tab-detalhe -->
+
+<div id="tab-comparativo" class="tab-content">
+
+  <section class="section">
+    <div class="section-title">COMPARATIVO ENTRE 2 PARTICIPANTES</div>
+
+    <div class="comp-selectors">
+      <div class="comp-selector-wrap">
+        <label class="comp-selector-label">Participante 1</label>
+        <select id="comp-p1-select" class="participant-selector">
+          <option value="">— Escolha o 1º participante —</option>
+        </select>
+      </div>
+      <div class="comp-vs">×</div>
+      <div class="comp-selector-wrap">
+        <label class="comp-selector-label">Participante 2</label>
+        <select id="comp-p2-select" class="participant-selector">
+          <option value="">— Escolha o 2º participante —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="comp-content"></div>
+  </section>
+
+</div><!-- /tab-comparativo -->
 
 </main>
 
@@ -1373,6 +1521,170 @@
     parseEmojis(target);
   }
 
+  // ─── COMPARATIVO ─────────────────────────────────────────
+  let _compParticipantsLoaded = false;
+  let _compParticipants = [];          // [{id, pront, nome}]
+
+  async function loadComparativoParticipantsList() {
+    if (_compParticipantsLoaded) return;
+    const { data, error } = await sb
+      .from('participants')
+      .select('id, pront, nome')
+      .eq('pago', true)
+      .order('nome', { ascending: true, nullsFirst: false });
+    if (error) { console.error(error); return; }
+    _compParticipants = data || [];
+
+    const optsHtml = _compParticipants.map(p =>
+      `<option value="${p.id}">${escapeHtml(p.nome ? `${p.nome} (${p.pront})` : p.pront)}</option>`
+    ).join('');
+    document.getElementById('comp-p1-select').insertAdjacentHTML('beforeend', optsHtml);
+    document.getElementById('comp-p2-select').insertAdjacentHTML('beforeend', optsHtml);
+    _compParticipantsLoaded = true;
+  }
+
+  async function renderComparativo() {
+    const p1Id = document.getElementById('comp-p1-select').value;
+    const p2Id = document.getElementById('comp-p2-select').value;
+    const target = document.getElementById('comp-content');
+
+    if (!p1Id || !p2Id) {
+      target.innerHTML = `<div class="empty">Selecione os 2 participantes pra comparar.</div>`;
+      return;
+    }
+    if (p1Id === p2Id) {
+      target.innerHTML = `<div class="error">⚠️ Escolha dois participantes diferentes.</div>`;
+      return;
+    }
+
+    target.innerHTML = `<div class="loading">Comparando…</div>`;
+
+    const [rankRes, gamesRes, predsRes, resultsRes] = await Promise.all([
+      sb.from('ranking').select('id, pront, nome, pos, pontos').in('id', [p1Id, p2Id]),
+      sb.from('games').select('*').order('id'),
+      sb.from('predictions').select('participant_id, game_id, gols_sel1, gols_sel2').in('participant_id', [p1Id, p2Id]),
+      sb.from('official_results').select('*')
+    ]);
+
+    if (rankRes.error || gamesRes.error || predsRes.error || resultsRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar dados do comparativo.</div>`;
+      return;
+    }
+
+    const rankMap = {}; (rankRes.data || []).forEach(r => { rankMap[r.id] = r; });
+    const p1 = rankMap[p1Id];
+    const p2 = rankMap[p2Id];
+    if (!p1 || !p2) {
+      target.innerHTML = `<div class="error">⚠️ Algum dos participantes não está marcado como pago — não aparece no ranking.</div>`;
+      return;
+    }
+
+    const games = gamesRes.data || [];
+    const resMap = {}; (resultsRes.data || []).forEach(r => { resMap[r.game_id] = r; });
+    const p1Preds = {};
+    const p2Preds = {};
+    (predsRes.data || []).forEach(p => {
+      const map = p.participant_id === p1Id ? p1Preds : p2Preds;
+      map[p.game_id] = p;
+    });
+
+    const nameOf = p => p.nome ? p.nome : p.pront;
+
+    // Cards
+    const cardsHtml = `
+      <div class="comp-cards">
+        <div class="comp-card">
+          <div class="comp-card-who">Participante 1</div>
+          <div class="comp-card-name" title="${escapeHtml(nameOf(p1))}">${escapeHtml(nameOf(p1))}</div>
+          <div class="comp-card-label">Posição</div>
+          <div class="comp-card-value">${p1.pos}º</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-who">Participante 1</div>
+          <div class="comp-card-name" title="${escapeHtml(nameOf(p1))}">${escapeHtml(nameOf(p1))}</div>
+          <div class="comp-card-label">Pontos</div>
+          <div class="comp-card-value">${p1.pontos}</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-who">Participante 2</div>
+          <div class="comp-card-name" title="${escapeHtml(nameOf(p2))}">${escapeHtml(nameOf(p2))}</div>
+          <div class="comp-card-label">Posição</div>
+          <div class="comp-card-value">${p2.pos}º</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-card-who">Participante 2</div>
+          <div class="comp-card-name" title="${escapeHtml(nameOf(p2))}">${escapeHtml(nameOf(p2))}</div>
+          <div class="comp-card-label">Pontos</div>
+          <div class="comp-card-value">${p2.pontos}</div>
+        </div>
+      </div>
+    `;
+
+    // Tabela
+    const fmtScore = (pal, pending = false) => pal
+      ? `<span class="score-pill${pending ? ' pending' : ''}">${pal.gols_sel1} × ${pal.gols_sel2}</span>`
+      : `<span class="score-pill pending">— × —</span>`;
+
+    const ptsCell = (bk) => {
+      if (bk == null)              return `<span class="pts-pill zero">—</span>`;
+      if (bk.total === 0)          return `<span class="pts-pill zero">0</span>`;
+      const pts = bk.placar || bk.vitPl || bk.vit || bk.emp || (bk.pl1Sv + bk.pl2Sv);
+      return `<span class="pts-pill has-${pts}">${bk.total}</span>`;
+    };
+
+    const rows = games.map(g => {
+      const a = p1Preds[g.id];
+      const b = p2Preds[g.id];
+      const r = resMap[g.id];
+
+      const bkA = (a && r) ? computeBreakdown(a.gols_sel1, a.gols_sel2, r.gols_sel1, r.gols_sel2) : null;
+      const bkB = (b && r) ? computeBreakdown(b.gols_sel1, b.gols_sel2, r.gols_sel1, r.gols_sel2) : null;
+
+      const ambasCravadas = bkA && bkA.placar === 5 && bkB && bkB.placar === 5;
+      const palpitesIguais = a && b && a.gols_sel1 === b.gols_sel1 && a.gols_sel2 === b.gols_sel2;
+
+      const trClasses = [];
+      if (isBrazilGame(g))  trClasses.push('is-brazil');
+      if (ambasCravadas)    trClasses.push('placar-cheio');
+
+      const palpiteACell = a ? `<span class="score-pill${palpitesIguais ? ' comp-pal-equal' : ''}">${a.gols_sel1} × ${a.gols_sel2}</span>` : `<span class="score-pill pending">— × —</span>`;
+      const palpiteBCell = b ? `<span class="score-pill${palpitesIguais ? ' comp-pal-equal' : ''}">${b.gols_sel1} × ${b.gols_sel2}</span>` : `<span class="score-pill pending">— × —</span>`;
+
+      return `
+        <tr class="${trClasses.join(' ')}">
+          <td>#${g.id}</td>
+          <td class="team-l">${escapeHtml(g.code1)} ${g.flag1 || ''}</td>
+          <td>${palpiteACell}</td>
+          <td>${palpiteBCell}</td>
+          <td class="team-r">${g.flag2 || ''} ${escapeHtml(g.code2)}</td>
+          <td>${ptsCell(bkA)}</td>
+          <td>${ptsCell(bkB)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    target.innerHTML = `
+      ${cardsHtml}
+      <div class="comp-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Jogo</th>
+              <th>Seleção 1</th>
+              <th title="${escapeHtml(nameOf(p1))}">${escapeHtml(nameOf(p1))}</th>
+              <th title="${escapeHtml(nameOf(p2))}">${escapeHtml(nameOf(p2))}</th>
+              <th>Seleção 2</th>
+              <th title="Pontos de ${escapeHtml(nameOf(p1))}">Pts ${escapeHtml(nameOf(p1)).slice(0,12)}</th>
+              <th title="Pontos de ${escapeHtml(nameOf(p2))}">Pts ${escapeHtml(nameOf(p2)).slice(0,12)}</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    parseEmojis(target);
+  }
+
   // ─── Tab switching ───────────────────────────────────────
   function activateTab(tabName) {
     document.querySelectorAll('.nav-tab').forEach(t =>
@@ -1384,6 +1696,9 @@
     if (tabName === 'detalhe') {
       loadDetalheParticipantsList();
       loadCravadasDates();
+    }
+    if (tabName === 'comparativo') {
+      loadComparativoParticipantsList();
     }
 
     // Volta o scroll pro topo ao trocar de aba
@@ -1412,6 +1727,9 @@
     if (dia) loadCravadasByDate(dia);
     else document.getElementById('cravadas-content').innerHTML = '';
   });
+
+  document.getElementById('comp-p1-select').addEventListener('change', renderComparativo);
+  document.getElementById('comp-p2-select').addEventListener('change', renderComparativo);
 
   Promise.all([loadCards(), loadRanking(), loadResults(), loadParticipantsList()])
     .then(() => parseEmojis(document.body))
