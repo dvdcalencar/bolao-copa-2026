@@ -1049,6 +1049,212 @@
     color: #FFE45C;
     border: 1px dashed rgba(255,228,92,0.5);
   }
+
+  /* ─── EVOLUÇÃO (bar chart race) ─── */
+  .evol-help {
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,215,0,0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+
+  .evolucao-frame-card {
+    background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04));
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+    min-height: 46px;
+  }
+  .evolucao-frame-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 1.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .evolucao-frame-meta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .evolucao-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    background: rgba(255,255,255,0.04);
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,215,0,0.15);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .evolucao-btn {
+    background: rgba(255,215,0,0.12);
+    border: 1px solid rgba(255,215,0,0.4);
+    color: var(--gold);
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    font-size: 14px;
+    line-height: 1;
+    min-width: 36px;
+    transition: background 0.15s;
+  }
+  .evolucao-btn:hover { background: rgba(255,215,0,0.22); }
+  .evolucao-btn.primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--green-dark);
+    font-size: 16px;
+    min-width: 50px;
+  }
+  .evolucao-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .evolucao-slider {
+    flex: 1;
+    min-width: 120px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    outline: none;
+  }
+  .evolucao-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: 2px solid var(--green-dark);
+  }
+  .evolucao-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: 2px solid var(--green-dark);
+  }
+  .evolucao-counter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 1.5px;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .evolucao-bars {
+    position: relative;
+    height: 540px;
+    background: rgba(0,0,0,0.18);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid rgba(255,215,0,0.15);
+    overflow: hidden;
+  }
+
+  .evol-bar {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    height: 44px;
+    display: grid;
+    grid-template-columns: 36px 130px 1fr 60px;
+    gap: 8px;
+    align-items: center;
+    transition:
+      transform 0.85s cubic-bezier(0.6, 0.2, 0.4, 1),
+      opacity 0.5s ease;
+    will-change: transform, opacity;
+    opacity: 1;
+  }
+  .evol-bar.entering {
+    opacity: 0;
+    transform: translateY(540px) !important;
+  }
+  .evol-bar.leaving {
+    opacity: 0;
+    transform: translateY(540px) !important;
+  }
+  .evol-pos {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 19px;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    letter-spacing: 1px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 5px 0;
+  }
+  .evol-pos.pos-1 { background: var(--gold);   color: var(--green-dark); }
+  .evol-pos.pos-2 { background: #C0C0C0;       color: var(--green-dark); }
+  .evol-pos.pos-3 { background: #CD7F32;       color: #fff; }
+
+  .evol-name {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .evol-bar-track {
+    height: 26px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .evol-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #145224, var(--gold));
+    border-radius: 6px;
+    transition: width 0.85s cubic-bezier(0.6, 0.2, 0.4, 1);
+    box-shadow: 0 2px 6px rgba(255,215,0,0.25);
+    width: 0%;
+  }
+  .evol-bar.pos-1 .evol-bar-fill {
+    background: linear-gradient(90deg, var(--gold-dark), #fff700);
+    box-shadow: 0 2px 12px rgba(255,215,0,0.5);
+  }
+
+  .evol-pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--gold);
+    text-align: right;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 540px) {
+    .evol-bar { grid-template-columns: 30px 90px 1fr 44px; gap: 6px; }
+    .evol-name { font-size: 12px; }
+    .evol-pts { font-size: 15px; }
+    .evolucao-bars { height: 500px; padding: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -1078,6 +1284,7 @@
   <button class="nav-tab active" data-tab="principal"   type="button">Principal</button>
   <button class="nav-tab"        data-tab="detalhe"     type="button">Detalhe</button>
   <button class="nav-tab"        data-tab="comparativo" type="button">Comparativo</button>
+  <button class="nav-tab"        data-tab="evolucao"    type="button">Evolução</button>
 </nav>
 
 <main class="container">
@@ -1174,6 +1381,16 @@
 
 </div><!-- /tab-comparativo -->
 
+<div id="tab-evolucao" class="tab-content">
+
+  <section class="section">
+    <div class="section-title">EVOLUÇÃO DO RANKING (TOP 10)</div>
+    <div class="evol-help">Reproduz a corrida do top 10 jogo a jogo, conforme os placares oficiais foram saindo. Use o ▶ pra assistir, o slider pra navegar manualmente.</div>
+    <div id="evolucao-content"></div>
+  </section>
+
+</div><!-- /tab-evolucao -->
+
 </main>
 
 <!-- ─── MODAL DE REGRAS ─── -->
@@ -1223,7 +1440,7 @@
 
         <div class="ref-card-section">
           <div class="ref-card-section-title">Distribuição da Premiação</div>
-          <p>O valor total da premiação é calculado sobre o montante arrecadado, do qual será descontado <strong>10% (taxa administrativa)</strong>. O valor restante será distribuído conforme os percentuais indicados ao lado.</p>
+          <p>O valor total da premiação é calculado sobre o montante arrecadado, do qual será descontado <strong>10% (taxa administrativa)</strong>. O valor restante será distribuído conforme os percentuais indicados acima.</p>
         </div>
 
         <div class="ref-card-section">
@@ -2036,8 +2253,247 @@
     parseEmojis(target);
   }
 
+  // ─── EVOLUÇÃO (bar chart race) ───────────────────────────
+  const _evolucao = {
+    loaded: false,
+    frames: [],
+    currentIdx: 0,
+    playing: false,
+    timer: null,
+    speed: 1500,        // ms entre frames
+    barHeight: 50,      // 44 da barra + 6 de gap
+    topN: 10,
+  };
+
+  async function loadEvolucao() {
+    if (_evolucao.loaded) return;
+
+    const target = document.getElementById('evolucao-content');
+    target.innerHTML = `<div class="loading">Calculando evolução…</div>`;
+
+    const [partsRes, gamesRes, predsRes, resRes] = await Promise.all([
+      sb.from('participants').select('id, pront, nome').eq('pago', true),
+      sb.from('games').select('*').order('id'),
+      sb.from('predictions').select('participant_id, game_id, gols_sel1, gols_sel2'),
+      sb.from('official_results').select('*'),
+    ]);
+
+    if (partsRes.error || gamesRes.error || predsRes.error || resRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar dados da evolução.</div>`;
+      return;
+    }
+
+    const parts   = partsRes.data   || [];
+    const games   = gamesRes.data   || [];
+    const preds   = predsRes.data   || [];
+    const results = resRes.data     || [];
+
+    if (parts.length === 0) {
+      target.innerHTML = `<div class="empty">Nenhum participante cadastrado ainda.</div>`;
+      return;
+    }
+    if (results.length === 0) {
+      target.innerHTML = `<div class="empty">⏳ Nenhum jogo encerrado ainda. A evolução começa quando o primeiro placar oficial for lançado.</div>`;
+      return;
+    }
+
+    const gamesById = {}; games.forEach(g => { gamesById[g.id] = g; });
+    const predsByPart = {};
+    preds.forEach(p => {
+      if (!predsByPart[p.participant_id]) predsByPart[p.participant_id] = {};
+      predsByPart[p.participant_id][p.game_id] = p;
+    });
+
+    // Ordena resultados pela data+hora REAL do jogo (não pelo encerrado_em)
+    const orderedResults = results
+      .filter(r => gamesById[r.game_id])
+      .sort((a, b) => {
+        const ga = gamesById[a.game_id], gb = gamesById[b.game_id];
+        const da = `${ga.dia}T${(ga.hora || '00:00')}`;
+        const db = `${gb.dia}T${(gb.hora || '00:00')}`;
+        if (da !== db) return da.localeCompare(db);
+        return a.game_id - b.game_id;  // tiebreak: id do jogo
+      });
+
+    // Computa frames cumulativos
+    const cumPoints = {};
+    parts.forEach(p => { cumPoints[p.id] = 0; });
+
+    const frames = [{
+      label: 'Antes do 1º jogo',
+      meta:  '',
+      gameId: null,
+      isBrazil: false,
+      snapshot: parts.map(p => ({ id: p.id, name: p.nome || p.pront, points: 0 }))
+    }];
+
+    orderedResults.forEach(r => {
+      const game = gamesById[r.game_id];
+      parts.forEach(p => {
+        const pred = predsByPart[p.id]?.[r.game_id];
+        if (pred) {
+          const bk = computeBreakdown(pred.gols_sel1, pred.gols_sel2, r.gols_sel1, r.gols_sel2);
+          if (bk) cumPoints[p.id] += bk.total;
+        }
+      });
+
+      frames.push({
+        label: `Após jogo #${game.id} · ${game.code1} ${r.gols_sel1} × ${r.gols_sel2} ${game.code2}`,
+        meta:  `${formatDateBR(game.dia)} · ${(game.hora || '').slice(0,5)} · Grupo ${game.grupo}`,
+        gameId: game.id,
+        isBrazil: isBrazilGame(game),
+        snapshot: parts.map(p => ({ id: p.id, name: p.nome || p.pront, points: cumPoints[p.id] }))
+      });
+    });
+
+    _evolucao.frames = frames;
+    _evolucao.currentIdx = 0;
+    _evolucao.loaded = true;
+
+    renderEvolucaoUI();
+  }
+
+  function renderEvolucaoUI() {
+    const target = document.getElementById('evolucao-content');
+    const total = _evolucao.frames.length;
+
+    target.innerHTML = `
+      <div class="evolucao-frame-card" id="evol-frame-card">
+        <div class="evolucao-frame-text" id="evol-frame-text">—</div>
+        <div class="evolucao-frame-meta" id="evol-frame-meta"></div>
+      </div>
+
+      <div class="evolucao-controls">
+        <button class="evolucao-btn" id="evol-restart" type="button" title="Voltar ao início">⟲</button>
+        <button class="evolucao-btn" id="evol-prev"    type="button" title="Anterior">◀</button>
+        <button class="evolucao-btn primary" id="evol-play" type="button" title="Tocar / Pausar">▶</button>
+        <button class="evolucao-btn" id="evol-next"    type="button" title="Próximo">▶▶</button>
+        <input type="range" id="evol-slider" class="evolucao-slider" min="0" max="${total - 1}" value="0">
+        <div class="evolucao-counter" id="evol-counter">1/${total}</div>
+      </div>
+
+      <div class="evolucao-bars" id="evol-bars"></div>
+    `;
+
+    document.getElementById('evol-restart').addEventListener('click', () => { pauseEvolucao(); goToEvolucaoFrame(0); });
+    document.getElementById('evol-prev').addEventListener('click',    () => { pauseEvolucao(); goToEvolucaoFrame(_evolucao.currentIdx - 1); });
+    document.getElementById('evol-next').addEventListener('click',    () => { pauseEvolucao(); goToEvolucaoFrame(_evolucao.currentIdx + 1); });
+    document.getElementById('evol-play').addEventListener('click', toggleEvolucaoPlay);
+    document.getElementById('evol-slider').addEventListener('input', e => { pauseEvolucao(); goToEvolucaoFrame(parseInt(e.target.value, 10)); });
+
+    goToEvolucaoFrame(0);
+  }
+
+  function goToEvolucaoFrame(idx) {
+    const total = _evolucao.frames.length;
+    idx = Math.max(0, Math.min(total - 1, idx));
+    _evolucao.currentIdx = idx;
+    const frame = _evolucao.frames[idx];
+    if (!frame) return;
+
+    document.getElementById('evol-slider').value  = idx;
+    document.getElementById('evol-counter').textContent = `${idx + 1}/${total}`;
+    document.getElementById('evol-frame-text').textContent = frame.label;
+    document.getElementById('evol-frame-meta').textContent = frame.meta || '';
+
+    document.getElementById('evol-prev').disabled = (idx === 0);
+    document.getElementById('evol-next').disabled = (idx === total - 1);
+
+    // Top N
+    const sorted = [...frame.snapshot].sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      return a.name.localeCompare(b.name);
+    });
+    const top = sorted.slice(0, _evolucao.topN);
+    const maxPts = Math.max(1, top[0]?.points || 1);
+
+    const container = document.getElementById('evol-bars');
+    const existing = {};
+    container.querySelectorAll('.evol-bar').forEach(el => { existing[el.dataset.id] = el; });
+    const stillVisible = new Set();
+
+    top.forEach((p, rank) => {
+      stillVisible.add(p.id);
+      let bar = existing[p.id];
+      const yPos = rank * _evolucao.barHeight;
+
+      if (!bar) {
+        // Nova barra (entrando no top 10) — começa fora da tela embaixo, opacity 0
+        bar = document.createElement('div');
+        bar.className = 'evol-bar entering';
+        bar.dataset.id = p.id;
+        bar.innerHTML = `
+          <div class="evol-pos">${rank + 1}º</div>
+          <div class="evol-name">${escapeHtml(p.name)}</div>
+          <div class="evol-bar-track"><div class="evol-bar-fill"></div></div>
+          <div class="evol-pts">0</div>
+        `;
+        container.appendChild(bar);
+        // forçar reflow pra animar a entrada
+        // eslint-disable-next-line no-unused-expressions
+        bar.offsetHeight;
+        requestAnimationFrame(() => {
+          bar.classList.remove('entering');
+          bar.style.transform = `translateY(${yPos}px)`;
+        });
+      } else {
+        bar.style.transform = `translateY(${yPos}px)`;
+      }
+
+      // Atualiza posição/cor
+      const posEl = bar.querySelector('.evol-pos');
+      posEl.textContent = `${rank + 1}º`;
+      posEl.className = `evol-pos pos-${rank + 1}`;
+      bar.classList.toggle('pos-1', rank === 0);
+
+      // Largura proporcional
+      const widthPct = (p.points / maxPts) * 100;
+      bar.querySelector('.evol-bar-fill').style.width = `${widthPct}%`;
+
+      // Pontos (ticker simples — atualiza no mesmo frame, CSS faz o resto suave via width)
+      bar.querySelector('.evol-pts').textContent = p.points;
+    });
+
+    // Remove quem caiu fora do top N
+    Object.entries(existing).forEach(([id, el]) => {
+      if (!stillVisible.has(id)) {
+        el.classList.add('leaving');
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 700);
+      }
+    });
+  }
+
+  function toggleEvolucaoPlay() {
+    if (_evolucao.playing) pauseEvolucao();
+    else playEvolucao();
+  }
+  function playEvolucao() {
+    if (_evolucao.frames.length === 0) return;
+    if (_evolucao.currentIdx >= _evolucao.frames.length - 1) {
+      goToEvolucaoFrame(0);
+    }
+    _evolucao.playing = true;
+    document.getElementById('evol-play').textContent = '❚❚';
+    _evolucao.timer = setInterval(() => {
+      if (_evolucao.currentIdx >= _evolucao.frames.length - 1) {
+        pauseEvolucao();
+        return;
+      }
+      goToEvolucaoFrame(_evolucao.currentIdx + 1);
+    }, _evolucao.speed);
+  }
+  function pauseEvolucao() {
+    _evolucao.playing = false;
+    if (_evolucao.timer) { clearInterval(_evolucao.timer); _evolucao.timer = null; }
+    const btn = document.getElementById('evol-play');
+    if (btn) btn.textContent = '▶';
+  }
+
   // ─── Tab switching ───────────────────────────────────────
   function activateTab(tabName) {
+    // Pausa a evolução ao trocar de aba (pra não consumir CPU em background)
+    if (tabName !== 'evolucao' && _evolucao.playing) pauseEvolucao();
+
     document.querySelectorAll('.nav-tab').forEach(t =>
       t.classList.toggle('active', t.dataset.tab === tabName));
     document.querySelectorAll('.tab-content').forEach(c =>
@@ -2050,6 +2506,9 @@
     }
     if (tabName === 'comparativo') {
       loadComparativoParticipantsList();
+    }
+    if (tabName === 'evolucao') {
+      loadEvolucao();
     }
 
     // Volta o scroll pro topo ao trocar de aba
