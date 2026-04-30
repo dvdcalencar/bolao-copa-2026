@@ -1231,14 +1231,14 @@
   }
   .evol-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #145224, var(--gold));
+    background: linear-gradient(90deg, #1a6b2e, #4a9b3e);
     border-radius: 6px;
     transition: width 0.85s cubic-bezier(0.6, 0.2, 0.4, 1);
-    box-shadow: 0 2px 6px rgba(255,215,0,0.25);
     width: 0%;
   }
-  /* Durante a reprodução o 1º lugar tem a MESMA barra dos outros — sem destaque.
-     Tudo de especial entra só no frame final, via .is-champion (mais abaixo). */
+  /* Durante a reprodução TODAS as barras ficam verdes — sem dourado nem glow.
+     A celebração dourada (gradiente brilhante + glow + animação) entra só no
+     último frame, via .is-champion (mais abaixo). */
 
   .evol-pts {
     font-family: 'Bebas Neue', sans-serif;
@@ -1246,6 +1246,16 @@
     color: var(--gold);
     text-align: right;
     letter-spacing: 0.5px;
+  }
+  /* Pílula dourada nos pontos do 1º — visível sempre, marca o líder no canto direito */
+  .evol-bar.pos-1 .evol-pts {
+    color: var(--green-dark);
+    background: var(--gold);
+    border-radius: 6px;
+    padding: 5px 8px;
+    line-height: 1;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
 
   /* ─── DESTAQUE DO CAMPEÃO (só no último frame) ───
@@ -1260,15 +1270,7 @@
     0%, 100% { box-shadow: 0 2px 16px rgba(255,215,0,0.5), 0 0 0 1px rgba(255,255,255,0.25) inset; }
     50%      { box-shadow: 0 2px 24px rgba(255,215,0,0.85), 0 0 0 1px rgba(255,255,255,0.4)  inset; }
   }
-  .evol-bar.is-champion .evol-pts {
-    color: var(--green-dark);
-    background: var(--gold);
-    border-radius: 6px;
-    padding: 5px 8px;
-    line-height: 1;
-    font-weight: 700;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.45);
-  }
+  /* (a pílula dos pontos do 1º já está em .evol-bar.pos-1 .evol-pts acima — sem duplicar) */
   .evol-bar.is-champion .evol-pos {
     background: var(--gold);
     color: var(--green-dark);
