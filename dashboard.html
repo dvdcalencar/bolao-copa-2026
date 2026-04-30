@@ -1249,6 +1249,18 @@
     letter-spacing: 0.5px;
   }
 
+  /* 1º lugar: pílula dourada com texto verde-escuro — vira badge de campeão e
+     fica sempre legível, mesmo sobre o glow da barra dourada */
+  .evol-bar.pos-1 .evol-pts {
+    color: var(--green-dark);
+    background: var(--gold);
+    border-radius: 6px;
+    padding: 5px 8px;
+    line-height: 1;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  }
+
   @media (max-width: 540px) {
     .evol-bar { grid-template-columns: 30px 90px 1fr 44px; gap: 6px; }
     .evol-name { font-size: 12px; }
