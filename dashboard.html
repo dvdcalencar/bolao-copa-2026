@@ -1238,7 +1238,16 @@
   }
   .evol-bar.pos-1 .evol-bar-fill {
     background: linear-gradient(90deg, var(--gold-dark), #fff700);
-    box-shadow: 0 2px 12px rgba(255,215,0,0.5);
+  }
+
+  /* Glow celebrativa — só aparece no último jogo, quando a reprodução acaba */
+  .evol-bar.is-champion .evol-bar-fill {
+    box-shadow: 0 2px 16px rgba(255,215,0,0.6), 0 0 0 1px rgba(255,255,255,0.25) inset;
+    animation: championPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes championPulse {
+    0%, 100% { box-shadow: 0 2px 16px rgba(255,215,0,0.5), 0 0 0 1px rgba(255,255,255,0.25) inset; }
+    50%      { box-shadow: 0 2px 24px rgba(255,215,0,0.85), 0 0 0 1px rgba(255,255,255,0.4) inset; }
   }
 
   .evol-pts {
@@ -1338,7 +1347,7 @@
 
   <!-- Comparar palpites -->
   <section class="section">
-    <div class="section-title">COMPARAR PALPITES</div>
+    <div class="section-title">COMPARAR: PALPITE vs OFICIAL</div>
     <select id="participant-select" class="participant-selector">
       <option value="">— Escolha um participante —</option>
     </select>
@@ -2457,6 +2466,10 @@
       posEl.textContent = `${rank + 1}º`;
       posEl.className = `evol-pos pos-${rank + 1}`;
       bar.classList.toggle('pos-1', rank === 0);
+
+      // Glow celebrativa: só pro 1º lugar quando estamos no último frame
+      const isLastFrame = (idx === total - 1);
+      bar.classList.toggle('is-champion', isLastFrame && rank === 0);
 
       // Largura proporcional
       const widthPct = (p.points / maxPts) * 100;
