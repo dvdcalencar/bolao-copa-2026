@@ -1231,14 +1231,14 @@
   }
   .evol-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #1a6b2e, #4a9b3e);
+    background: linear-gradient(90deg, #145224, var(--gold));
     border-radius: 6px;
     transition: width 0.85s cubic-bezier(0.6, 0.2, 0.4, 1);
     width: 0%;
   }
-  /* Durante a reprodução TODAS as barras ficam verdes — sem dourado nem glow.
-     A celebração dourada (gradiente brilhante + glow + animação) entra só no
-     último frame, via .is-champion (mais abaixo). */
+  /* Gradiente verde→dourado padrão pra todas as barras.
+     Celebração no .is-champion: gradiente mais brilhante + borda interna,
+     sem halo externo (que era o "fundão amarelo" se espalhando pra fora). */
 
   .evol-pts {
     font-family: 'Bebas Neue', sans-serif;
@@ -1259,16 +1259,16 @@
   }
 
   /* ─── DESTAQUE DO CAMPEÃO (só no último frame) ───
-     Aplica gradiente dourado brilhante na barra, glow pulsante e
-     pílula dourada nos pontos. Removido durante a reprodução normal. */
+     Gradiente dourado mais brilhante + pulse sutil de brilho.
+     SEM glow externa — assim não cria halo amarelo cobrindo a linha inteira. */
   .evol-bar.is-champion .evol-bar-fill {
     background: linear-gradient(90deg, var(--gold-dark), #fff700);
-    box-shadow: 0 2px 16px rgba(255,215,0,0.6), 0 0 0 1px rgba(255,255,255,0.25) inset;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.35) inset;
     animation: championPulse 1.6s ease-in-out infinite;
   }
   @keyframes championPulse {
-    0%, 100% { box-shadow: 0 2px 16px rgba(255,215,0,0.5), 0 0 0 1px rgba(255,255,255,0.25) inset; }
-    50%      { box-shadow: 0 2px 24px rgba(255,215,0,0.85), 0 0 0 1px rgba(255,255,255,0.4)  inset; }
+    0%, 100% { filter: brightness(1);    }
+    50%      { filter: brightness(1.18); }
   }
   /* (a pílula dos pontos do 1º já está em .evol-bar.pos-1 .evol-pts acima — sem duplicar) */
   .evol-bar.is-champion .evol-pos {
