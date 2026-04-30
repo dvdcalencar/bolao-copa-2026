@@ -1207,7 +1207,8 @@
     border-radius: 6px;
     padding: 5px 0;
   }
-  .evol-pos.pos-1 { background: var(--gold);   color: var(--green-dark); }
+  /* 1º lugar fica neutro durante a reprodução — sem fundo dourado, igual aos outros.
+     Só ganha destaque dourado no último frame, via .is-champion (mais abaixo). */
   .evol-pos.pos-2 { background: #C0C0C0;       color: var(--green-dark); }
   .evol-pos.pos-3 { background: #CD7F32;       color: #fff; }
 
@@ -1267,6 +1268,10 @@
     line-height: 1;
     font-weight: 700;
     box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  }
+  .evol-bar.is-champion .evol-pos {
+    background: var(--gold);
+    color: var(--green-dark);
   }
 
   @media (max-width: 540px) {
