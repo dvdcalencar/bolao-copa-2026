@@ -788,6 +788,267 @@
     }
     .comp-vs { display: none; }
   }
+
+  /* ─── BOTÃO DO APITO (header) ─── */
+  .app-header { position: relative; }
+  .rules-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 14px;
+    padding: 8px 10px 6px;
+    color: var(--gold);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    z-index: 5;
+  }
+  .rules-btn:hover {
+    background: rgba(255,215,0,0.18);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255,215,0,0.25);
+  }
+  .rules-btn:active { transform: translateY(0); }
+  .rules-btn-icon {
+    width: 28px;
+    height: 28px;
+    display: block;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4));
+  }
+  .rules-btn-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  @media (max-width: 540px) {
+    .rules-btn { top: 10px; right: 10px; padding: 6px 8px 4px; }
+    .rules-btn-icon { width: 24px; height: 24px; }
+    .rules-btn-label { font-size: 10px; }
+  }
+
+  /* ─── MODAL DE REGRAS ─── */
+  .rules-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 12px;
+    overflow-y: auto;
+  }
+  .rules-modal.show { display: flex; }
+  .rules-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .rules-modal-sheet {
+    position: relative;
+    background: linear-gradient(180deg, #0a2510, #0d3d19);
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 720px;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.7);
+    margin: auto;
+    animation: rulesIn 0.25s ease;
+  }
+  @keyframes rulesIn {
+    from { transform: translateY(20px) scale(0.97); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .rules-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 2px solid rgba(255,215,0,0.3);
+    background: linear-gradient(135deg, rgba(255,215,0,0.08), transparent);
+    border-radius: 16px 16px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #0a2510;
+  }
+  .rules-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2.5px;
+  }
+  .rules-modal-close {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    font-size: 20px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    line-height: 1;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .rules-modal-close:hover { background: rgba(230,57,70,0.5); transform: rotate(90deg); }
+  .rules-modal-body {
+    padding: 18px 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ─── CARTÕES DE ARBITRO ─── */
+  .ref-card {
+    position: relative;
+    border-radius: 10px;
+    padding: 18px 18px 18px 18px;
+    color: #1a1a1a;
+    box-shadow:
+      0 6px 18px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.35);
+    overflow: hidden;
+  }
+  .ref-card::before {
+    /* textura sutil (papel cartão) */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(0,0,0,0.025) 0 2px,
+      transparent 2px 6px
+    );
+    pointer-events: none;
+  }
+  .ref-card-corner {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: rgba(0,0,0,0.18);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .ref-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    border-bottom: 2px solid rgba(0,0,0,0.18);
+    padding-bottom: 8px;
+  }
+  .ref-card-sub {
+    font-size: 13px;
+    color: rgba(0,0,0,0.78);
+    margin-bottom: 6px;
+  }
+  .ref-card-list {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .ref-card-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.35;
+    color: rgba(0,0,0,0.85);
+  }
+  .ref-pts, .ref-pct {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    padding: 0 8px;
+  }
+  .ref-pct-tax {
+    background: rgba(0,0,0,0.45);
+  }
+
+  .ref-card-yellow {
+    background: linear-gradient(160deg, #FFE45C 0%, #F5C518 100%);
+  }
+  .ref-card-green {
+    background: linear-gradient(160deg, #4FC76A 0%, #1F8A3D 100%);
+    color: #fff;
+  }
+  .ref-card-green .ref-card-title,
+  .ref-card-green .ref-card-list li,
+  .ref-card-green .ref-card-sub { color: #fff; }
+  .ref-card-green .ref-card-title { border-bottom-color: rgba(255,255,255,0.35); }
+  .ref-card-green .ref-pct { background: rgba(0,0,0,0.5); color: #fff; }
+
+  .ref-card-red {
+    background: linear-gradient(160deg, #E84C5C 0%, #B72E3F 100%);
+    color: #fff;
+  }
+  .ref-card-red .ref-card-title { color: #fff; border-bottom-color: rgba(255,255,255,0.35); }
+  .ref-card-red .ref-card-corner { color: rgba(255,255,255,0.3); font-size: 38px; }
+  .ref-card-red p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.95);
+    margin: 6px 0;
+  }
+  .ref-card-red strong { color: #fff; }
+  .ref-card-section { margin-top: 10px; }
+  .ref-card-section:first-of-type { margin-top: 0; }
+  .ref-card-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+    color: #fff;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .ref-card-examples {
+    background: rgba(0,0,0,0.18);
+    border-left: 3px solid rgba(255,255,255,0.5);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ref-card-example {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: #fff;
+  }
+  .ref-card-warn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: #FFE45C;
+    border: 1px dashed rgba(255,228,92,0.5);
+  }
 </style>
 </head>
 <body>
@@ -796,6 +1057,21 @@
   <div class="header-trophy">🏆</div>
   <div class="header-title">BOLÃO COPA 2026</div>
   <div class="header-sub">DASHBOARD · RANKING · PRÊMIOS</div>
+
+  <button id="rules-btn" class="rules-btn" type="button" aria-label="Ver regras">
+    <svg class="rules-btn-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- Argola da cordinha -->
+      <circle cx="13" cy="5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="13" y1="7.6" x2="13" y2="11.5" stroke="currentColor" stroke-width="1.6"/>
+      <!-- Corpo do apito -->
+      <ellipse cx="12" cy="19" rx="9" ry="7.5" fill="currentColor"/>
+      <!-- Bocal -->
+      <rect x="20" y="15.5" width="9" height="7" rx="1.6" fill="currentColor"/>
+      <!-- Furo de cima -->
+      <circle cx="12" cy="14" r="2" fill="rgba(0,0,0,0.35)"/>
+    </svg>
+    <span class="rules-btn-label">Regras</span>
+  </button>
 </header>
 
 <nav class="nav-tabs">
@@ -899,6 +1175,81 @@
 </div><!-- /tab-comparativo -->
 
 </main>
+
+<!-- ─── MODAL DE REGRAS ─── -->
+<div id="rules-modal" class="rules-modal" aria-hidden="true">
+  <div class="rules-modal-backdrop"></div>
+  <div class="rules-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title">
+    <div class="rules-modal-head">
+      <div id="rules-modal-title" class="rules-modal-title">📜 REGRAS DO BOLÃO</div>
+      <button class="rules-modal-close" type="button" aria-label="Fechar">×</button>
+    </div>
+
+    <div class="rules-modal-body">
+
+      <!-- ─── CARTÃO AMARELO: PONTUAÇÃO ─── -->
+      <div class="ref-card ref-card-yellow">
+        <div class="ref-card-corner">5/3/2/1</div>
+        <div class="ref-card-title">Regras de Pontuação</div>
+        <ul class="ref-card-list">
+          <li><span class="ref-pts">5</span> Acertou o placar em cheio (2 placares)</li>
+          <li><span class="ref-pts">3</span> Acertou o vencedor + 1 placar</li>
+          <li><span class="ref-pts">2</span> Acertou o vencedor (sem placar exato)</li>
+          <li><span class="ref-pts">2</span> Acertou que foi empate (sem placar exato)</li>
+          <li><span class="ref-pts">1</span> Acertou apenas 1 dos placares</li>
+        </ul>
+      </div>
+
+      <!-- ─── CARTÃO VERDE: PREMIAÇÃO ─── -->
+      <div class="ref-card ref-card-green">
+        <div class="ref-card-corner">R$ 50</div>
+        <div class="ref-card-title">Regras de Premiação</div>
+        <div class="ref-card-sub">Inscrição: <strong>R$ 50</strong> por participante</div>
+        <ul class="ref-card-list">
+          <li><span class="ref-pct">60%</span> 1º lugar</li>
+          <li><span class="ref-pct">20%</span> 2º lugar</li>
+          <li><span class="ref-pct">10%</span> 3º lugar</li>
+          <li><span class="ref-pct ref-pct-tax">10%</span> Taxa administrativa</li>
+        </ul>
+        <div class="ref-card-sub" style="margin-top:8px;">
+          Cálculo sobre o <strong>valor total arrecadado</strong> (qtd. de participantes × R$ 50).
+        </div>
+      </div>
+
+      <!-- ─── CARTÃO VERMELHO: ATENÇÃO ─── -->
+      <div class="ref-card ref-card-red">
+        <div class="ref-card-corner">!</div>
+        <div class="ref-card-title">⚠️ Atenção</div>
+
+        <div class="ref-card-section">
+          <div class="ref-card-section-title">Distribuição da Premiação</div>
+          <p>O valor total da premiação é calculado sobre o montante arrecadado, do qual será descontado <strong>10% (taxa administrativa)</strong>. O valor restante será distribuído conforme os percentuais indicados ao lado.</p>
+        </div>
+
+        <div class="ref-card-section">
+          <div class="ref-card-section-title">Regra de Empate</div>
+          <p>Caso dois ou mais participantes terminem a rodada com a mesma pontuação, os prêmios das posições empatadas serão somados e divididos igualmente entre todos os empatados.</p>
+
+          <div class="ref-card-examples">
+            <div class="ref-card-example">
+              <strong>Empate entre 1º e 2º lugar:</strong> soma-se 60% + 20% = <strong>80%</strong>, dividido igualmente entre os dois.
+            </div>
+            <div class="ref-card-example">
+              <strong>Empate entre 1º, 2º e 3º lugar:</strong> soma-se 60% + 20% + 10% = <strong>90%</strong>, dividido igualmente entre os três.
+            </div>
+          </div>
+
+          <p>Essa regra se aplica a qualquer combinação de empate, independentemente das posições envolvidas: os percentuais das posições empatadas são sempre somados e repartidos em partes iguais entre os empatados.</p>
+
+          <div class="ref-card-warn">
+            ⚠️ A regra de empate só se aplica quando houver premiação disponível para as posições em questão.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <!-- Twemoji -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
@@ -1708,6 +2059,30 @@
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.addEventListener('click', () => activateTab(tab.dataset.tab));
   });
+
+  // ─── Modal de Regras ─────────────────────────────────────
+  (function setupRulesModal() {
+    const modal   = document.getElementById('rules-modal');
+    const openBtn = document.getElementById('rules-btn');
+    const backdrop = modal.querySelector('.rules-modal-backdrop');
+    const closeBtn = modal.querySelector('.rules-modal-close');
+
+    function open() {
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function close() {
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    openBtn.addEventListener('click', open);
+    backdrop.addEventListener('click', close);
+    closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
 
   // ─── Init ────────────────────────────────────────────────
   document.getElementById('participant-select').addEventListener('change', e => {
