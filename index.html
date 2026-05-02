@@ -700,7 +700,7 @@
 
   .comp-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 12px;
     margin-bottom: 18px;
   }
@@ -723,11 +723,27 @@
     font-size: 17px;
     color: var(--gold);
     letter-spacing: 1.5px;
-    margin: 2px 0 6px;
+    margin: 2px 0 10px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .comp-card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+  .comp-card-stats::before {
+    content: "";
+    grid-column: 2;
+    align-self: stretch;
+    background: rgba(255,215,0,0.18);
+    width: 1px;
+    margin: 4px 0;
+  }
+  .comp-card-stat:first-child { grid-column: 1; }
+  .comp-card-stat:last-child  { grid-column: 3; }
   .comp-card-label {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 10px;
@@ -2195,26 +2211,30 @@
         <div class="comp-card">
           <div class="comp-card-who">Participante 1</div>
           <div class="comp-card-name" title="${escapeHtml(nameOf(p1))}">${escapeHtml(nameOf(p1))}</div>
-          <div class="comp-card-label">Posição</div>
-          <div class="comp-card-value">${p1.pos}º</div>
-        </div>
-        <div class="comp-card">
-          <div class="comp-card-who">Participante 1</div>
-          <div class="comp-card-name" title="${escapeHtml(nameOf(p1))}">${escapeHtml(nameOf(p1))}</div>
-          <div class="comp-card-label">Pontos</div>
-          <div class="comp-card-value">${p1.pontos}</div>
-        </div>
-        <div class="comp-card">
-          <div class="comp-card-who">Participante 2</div>
-          <div class="comp-card-name" title="${escapeHtml(nameOf(p2))}">${escapeHtml(nameOf(p2))}</div>
-          <div class="comp-card-label">Posição</div>
-          <div class="comp-card-value">${p2.pos}º</div>
+          <div class="comp-card-stats">
+            <div class="comp-card-stat">
+              <div class="comp-card-label">Posição</div>
+              <div class="comp-card-value">${p1.pos}º</div>
+            </div>
+            <div class="comp-card-stat">
+              <div class="comp-card-label">Pontos</div>
+              <div class="comp-card-value">${p1.pontos}</div>
+            </div>
+          </div>
         </div>
         <div class="comp-card">
           <div class="comp-card-who">Participante 2</div>
           <div class="comp-card-name" title="${escapeHtml(nameOf(p2))}">${escapeHtml(nameOf(p2))}</div>
-          <div class="comp-card-label">Pontos</div>
-          <div class="comp-card-value">${p2.pontos}</div>
+          <div class="comp-card-stats">
+            <div class="comp-card-stat">
+              <div class="comp-card-label">Posição</div>
+              <div class="comp-card-value">${p2.pos}º</div>
+            </div>
+            <div class="comp-card-stat">
+              <div class="comp-card-label">Pontos</div>
+              <div class="comp-card-value">${p2.pontos}</div>
+            </div>
+          </div>
         </div>
       </div>
     `;
