@@ -1349,7 +1349,7 @@
       <div class="card-icon">💰</div>
       <div class="card-label">Arrecadado</div>
       <div class="card-value" id="card-arrecadado">—</div>
-      <div class="card-foot">R$ 50 × participantes</div>
+      <div class="card-foot">R$ 100 × participantes</div>
     </div>
     <div class="card">
       <div class="card-icon">🏆</div>
@@ -1466,9 +1466,9 @@
 
       <!-- ─── CARTÃO VERDE: PREMIAÇÃO ─── -->
       <div class="ref-card ref-card-green">
-        <div class="ref-card-corner">R$ 50</div>
+        <div class="ref-card-corner">R$ 100</div>
         <div class="ref-card-title">Regras de Premiação</div>
-        <div class="ref-card-sub">Inscrição: <strong>R$ 50</strong> por participante</div>
+        <div class="ref-card-sub">Inscrição: <strong>R$ 100</strong> por participante</div>
         <ul class="ref-card-list">
           <li><span class="ref-pct">60%</span> 1º lugar</li>
           <li><span class="ref-pct">20%</span> 2º lugar</li>
@@ -1476,7 +1476,7 @@
           <li><span class="ref-pct ref-pct-tax">10%</span> Taxa administrativa</li>
         </ul>
         <div class="ref-card-sub" style="margin-top:8px;">
-          Cálculo sobre o <strong>valor total arrecadado</strong> (qtd. de participantes × R$ 50).
+          Cálculo sobre o <strong>valor total arrecadado</strong> (qtd. de participantes × R$ 100).
         </div>
       </div>
 
@@ -1565,7 +1565,7 @@
       return;
     }
     const n = count || 0;
-    const arrecadado = n * 50;
+    const arrecadado = n * 100;
     const premios    = arrecadado * 0.9;
     document.getElementById('card-participants').textContent = n;
     document.getElementById('card-arrecadado').textContent   = fmtBRL(arrecadado);
