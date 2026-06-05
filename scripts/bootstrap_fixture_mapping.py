@@ -1,46 +1,41 @@
 """
-BOOTSTRAP — rode UMA ÚNICA VEZ pra vincular cada jogo (id 1-72) ao fixture
-externo da API-Football.
+BOOTSTRAP — rode UMA ÚNICA VEZ pra vincular cada jogo (id 1-72) ao match
+externo da football-data.org.
 
 Pré-requisitos:
 - A coluna games.external_fixture_id existe
   (rodar schema_update_external_id.sql no Supabase antes)
-- Variáveis de ambiente API_FOOTBALL_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY
+- Secrets/variáveis: FOOTBALL_DATA_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY
 
-Como rodar localmente (no Windows PowerShell):
-  $env:API_FOOTBALL_KEY="..."
-  $env:SUPABASE_URL="https://wyfmrfrsczcpbtwwpuhi.supabase.co"
-  $env:SUPABASE_SERVICE_KEY="sb_secret_..."
-  python scripts/bootstrap_fixture_mapping.py
-
-Ou via GitHub Actions: ver workflow `bootstrap-fixtures.yml` (manual trigger).
+Roda pela aba Actions do GitHub: workflow "Bootstrap Mapping (manual)".
 """
 
 import sys
 import requests
 
 from common import (
-    LEAGUE_ID, SEASON, API_BASE,
+    COMPETITION, API_BASE,
     get_config, api_headers, sb_headers,
     team_matches,
 )
 
 
-def fetch_api_fixtures(cfg):
-    url = f'{API_BASE}/fixtures'
-    params = {'league': LEAGUE_ID, 'season': SEASON}
-    print(f'🔍 Buscando fixtures da API-Football (league={LEAGUE_ID}, season={SEASON})…')
-    r = requests.get(url, headers=api_headers(cfg['api_key']), params=params, timeout=30)
-    r.raise_for_status()
+def fetch_api_matches(cfg):
+    """Busca todos os jogos da Copa pela football-data.org."""
+    url = f'{API_BASE}/competitions/{COMPETITION}/matches'
+    print(f'🔍 Buscando matches em {url}…')
+    r = requests.get(url, headers=api_headers(cfg['football_token']), timeout=30)
+    if r.status_code != 200:
+        print(f'❌ HTTP {r.status_code}: {r.text[:300]}', file=sys.stderr)
+        sys.exit(1)
     data = r.json()
-    fixtures = data.get('response', []) or []
-    print(f'   API retornou {len(fixtures)} fixtures.')
-    if data.get('errors'):
-        print(f'   ⚠️  Avisos da API: {data["errors"]}')
-    return fixtures
+    matches = data.get('matches', []) or []
+    print(f'   API retornou {len(matches)} matches.')
+    return matches
 
 
 def fetch_games(cfg):
+    """Busca os 72 jogos do Supabase."""
     url = f'{cfg["supabase_url"]}/rest/v1/games?select=*&order=id'
     r = requests.get(url, headers=sb_headers(cfg['supabase_key']), timeout=30)
     r.raise_for_status()
@@ -58,30 +53,35 @@ def update_game(cfg, game_id, external_id):
     r.raise_for_status()
 
 
-def match_fixture(game, fixtures):
+def match_for_game(game, matches):
+    """Acha o(s) match(es) da API que batem com o jogo do banco.
+
+    Critério: data do jogo (utcDate vs games.dia) + nomes dos dois times
+    em qualquer ordem (home/away).
+    """
     target_date = game['dia']
     sel1, sel2 = game['sel1'], game['sel2']
 
-    def matches(f):
-        if f['fixture']['date'][:10] != target_date:
-            return False
-        home = f['teams']['home']['name']
-        away = f['teams']['away']['name']
-        return (
-            (team_matches(home, sel1) and team_matches(away, sel2)) or
-            (team_matches(home, sel2) and team_matches(away, sel1))
-        )
-
-    return [f for f in fixtures if matches(f)]
+    candidates = []
+    for m in matches:
+        # utcDate vem em ISO: "2026-06-11T20:00:00Z" — só os 10 primeiros chars
+        if m.get('utcDate', '')[:10] != target_date:
+            continue
+        home = (m.get('homeTeam') or {}).get('name', '')
+        away = (m.get('awayTeam') or {}).get('name', '')
+        if (team_matches(home, sel1) and team_matches(away, sel2)) or \
+           (team_matches(home, sel2) and team_matches(away, sel1)):
+            candidates.append(m)
+    return candidates
 
 
 def main():
     cfg = get_config()
 
-    fixtures = fetch_api_fixtures(cfg)
-    if not fixtures:
-        print('❌ Nenhum fixture encontrado. Confirme a chave da API-Football,'
-              ' a temporada (2026) e a league (1).', file=sys.stderr)
+    matches = fetch_api_matches(cfg)
+    if not matches:
+        print('❌ Nenhum match encontrado. Verifique o token e se a Copa 2026 está no plano.',
+              file=sys.stderr)
         sys.exit(1)
 
     games = fetch_games(cfg)
@@ -91,11 +91,11 @@ def main():
     issues = []
 
     for g in games:
-        cands = match_fixture(g, fixtures)
+        cands = match_for_game(g, matches)
         if len(cands) == 1:
-            ext_id = cands[0]['fixture']['id']
+            ext_id = cands[0]['id']
             update_game(cfg, g['id'], ext_id)
-            print(f'  ✅ Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) → fixture {ext_id}')
+            print(f'  ✅ Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) → match {ext_id}')
             matched += 1
         elif len(cands) == 0:
             print(f'  ⚠️  Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) — SEM MATCH')
@@ -103,13 +103,12 @@ def main():
         else:
             print(f'  ⚠️  Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) — {len(cands)} candidatos:')
             for c in cands:
-                print(f'       fixture {c["fixture"]["id"]}: {c["teams"]["home"]["name"]} × {c["teams"]["away"]["name"]} ({c["fixture"]["date"][:10]})')
+                print(f'       match {c["id"]}: {c["homeTeam"]["name"]} × {c["awayTeam"]["name"]} ({c["utcDate"][:10]})')
             issues.append((g, f'{len(cands)} candidatos ambíguos'))
 
     print(f'\n✨ Resultado: {matched}/{len(games)} jogos mapeados.')
     if issues:
-        print(f'⚠️  {len(issues)} jogos com problema. Revise PT_TO_EN em common.py'
-              ' ou faça matching manual no Supabase.')
+        print(f'⚠️  {len(issues)} jogos com problema. Revise PT_TO_EN em common.py.')
         sys.exit(1)
 
 
