@@ -1,13 +1,11 @@
 """
-BOOTSTRAP — rode UMA ÚNICA VEZ pra vincular cada jogo (id 1-72) ao match
-externo da football-data.org.
+BOOTSTRAP — vincula cada jogo (id 1-72) ao external_fixture_id do
+football-data.org.
 
-Pré-requisitos:
-- A coluna games.external_fixture_id existe
-  (rodar schema_update_external_id.sql no Supabase antes)
-- Secrets/variáveis: FOOTBALL_DATA_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY
-
-Roda pela aba Actions do GitHub: workflow "Bootstrap Mapping (manual)".
+Estratégia: match por PAR DE TIMES (sel1 × sel2 em qualquer ordem),
+sem exigir que a data bata. Se houver mais de um candidato (raro no group
+stage onde cada par joga apenas 1 vez), prefere o que está na mesma data.
+Mostra debug detalhado pra qualquer falha residual.
 """
 
 import sys
@@ -21,7 +19,6 @@ from common import (
 
 
 def fetch_api_matches(cfg):
-    """Busca todos os jogos da Copa pela football-data.org."""
     url = f'{API_BASE}/competitions/{COMPETITION}/matches'
     print(f'🔍 Buscando matches em {url}…')
     r = requests.get(url, headers=api_headers(cfg['football_token']), timeout=30)
@@ -35,7 +32,6 @@ def fetch_api_matches(cfg):
 
 
 def fetch_games(cfg):
-    """Busca os 72 jogos do Supabase."""
     url = f'{cfg["supabase_url"]}/rest/v1/games?select=*&order=id'
     r = requests.get(url, headers=sb_headers(cfg['supabase_key']), timeout=30)
     r.raise_for_status()
@@ -53,39 +49,62 @@ def update_game(cfg, game_id, external_id):
     r.raise_for_status()
 
 
+def home_away(m):
+    return (
+        (m.get('homeTeam') or {}).get('name', ''),
+        (m.get('awayTeam') or {}).get('name', ''),
+    )
+
+
 def match_for_game(game, matches):
-    """Acha o(s) match(es) da API que batem com o jogo do banco.
-
-    Critério: data do jogo (utcDate vs games.dia) + nomes dos dois times
-    em qualquer ordem (home/away).
-    """
-    target_date = game['dia']
+    """Acha candidatos batendo PAR DE TIMES (independente da data)."""
     sel1, sel2 = game['sel1'], game['sel2']
-
-    candidates = []
+    cands = []
     for m in matches:
-        # utcDate vem em ISO: "2026-06-11T20:00:00Z" — só os 10 primeiros chars
-        if m.get('utcDate', '')[:10] != target_date:
-            continue
-        home = (m.get('homeTeam') or {}).get('name', '')
-        away = (m.get('awayTeam') or {}).get('name', '')
+        home, away = home_away(m)
         if (team_matches(home, sel1) and team_matches(away, sel2)) or \
            (team_matches(home, sel2) and team_matches(away, sel1)):
-            candidates.append(m)
-    return candidates
+            cands.append(m)
+
+    # Tiebreak: se mais de um, prefere mesma data
+    if len(cands) > 1:
+        same_date = [c for c in cands if c.get('utcDate', '')[:10] == game['dia']]
+        if same_date:
+            return same_date
+    return cands
+
+
+def debug_failure(game, matches):
+    """Loga o que tem na API perto desse jogo, pra ajudar a diagnosticar."""
+    sel1, sel2 = game['sel1'], game['sel2']
+
+    same_date = [m for m in matches if m.get('utcDate', '')[:10] == game['dia']]
+    if same_date:
+        print(f'      Jogos na data {game["dia"]} na API:')
+        for m in same_date[:6]:
+            h, a = home_away(m)
+            print(f'        • {h} × {a}  ({m["utcDate"][11:16]} UTC)')
+    else:
+        print(f'      ⓘ Nenhum jogo na data {game["dia"]} na API.')
+
+    has_sel1 = [m for m in matches if team_matches(home_away(m)[0], sel1)
+                                   or team_matches(home_away(m)[1], sel1)]
+    has_sel2 = [m for m in matches if team_matches(home_away(m)[0], sel2)
+                                   or team_matches(home_away(m)[1], sel2)]
+    print(f'      "{sel1}" aparece em {len(has_sel1)} match(es). '
+          f'"{sel2}" aparece em {len(has_sel2)} match(es).')
 
 
 def main():
     cfg = get_config()
-
     matches = fetch_api_matches(cfg)
     if not matches:
-        print('❌ Nenhum match encontrado. Verifique o token e se a Copa 2026 está no plano.',
-              file=sys.stderr)
+        print('❌ Nenhum match retornado pela API.', file=sys.stderr)
         sys.exit(1)
 
     games = fetch_games(cfg)
-    print(f'\n📋 {len(games)} jogos no Supabase. Iniciando matching…\n')
+    print(f'\n📋 {len(games)} jogos no Supabase. Iniciando matching '
+          f'(por par de times, sem exigir data)…\n')
 
     matched = 0
     issues = []
@@ -99,16 +118,18 @@ def main():
             matched += 1
         elif len(cands) == 0:
             print(f'  ⚠️  Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) — SEM MATCH')
+            debug_failure(g, matches)
             issues.append((g, 'sem match'))
         else:
-            print(f'  ⚠️  Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) — {len(cands)} candidatos:')
+            print(f'  ⚠️  Jogo #{g["id"]:>2} ({g["sel1"]} × {g["sel2"]}) — {len(cands)} ambíguos:')
             for c in cands:
-                print(f'       match {c["id"]}: {c["homeTeam"]["name"]} × {c["awayTeam"]["name"]} ({c["utcDate"][:10]})')
-            issues.append((g, f'{len(cands)} candidatos ambíguos'))
+                h, a = home_away(c)
+                print(f'       match {c["id"]}: {h} × {a} ({c["utcDate"][:10]})')
+            issues.append((g, f'{len(cands)} candidatos'))
 
     print(f'\n✨ Resultado: {matched}/{len(games)} jogos mapeados.')
     if issues:
-        print(f'⚠️  {len(issues)} jogos com problema. Revise PT_TO_EN em common.py.')
+        print(f'⚠️  {len(issues)} jogos com problema. Cola o log e me passa pra ajustar.')
         sys.exit(1)
 
 
