@@ -1,14 +1,18 @@
 """
 Funções e constantes compartilhadas entre bootstrap e update.
+
+Fonte de dados: football-data.org v4 (plano grátis cobre World Cup).
+- Base: https://api.football-data.org/v4
+- Auth: header X-Auth-Token
+- Competição "WC" = FIFA World Cup
 """
 
 import os
 import sys
 import unicodedata
 
-LEAGUE_ID = 1       # FIFA World Cup (League ID padrão da API-Football)
-SEASON    = 2026
-API_BASE  = 'https://v3.football.api-sports.io'
+COMPETITION  = 'WC'   # FIFA World Cup (id padrão no football-data.org)
+API_BASE     = 'https://api.football-data.org/v4'
 
 
 def env(name: str) -> str:
@@ -22,17 +26,14 @@ def env(name: str) -> str:
 def get_config():
     """Lê as 3 variáveis necessárias do ambiente."""
     return {
-        'api_key':         env('API_FOOTBALL_KEY'),
+        'football_token':  env('FOOTBALL_DATA_TOKEN'),
         'supabase_url':    env('SUPABASE_URL').rstrip('/'),
         'supabase_key':    env('SUPABASE_SERVICE_KEY'),
     }
 
 
-def api_headers(api_key: str) -> dict:
-    return {
-        'x-rapidapi-key':  api_key,
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-    }
+def api_headers(token: str) -> dict:
+    return {'X-Auth-Token': token}
 
 
 def sb_headers(sb_key: str, *, prefer: str | None = None) -> dict:
@@ -47,23 +48,29 @@ def sb_headers(sb_key: str, *, prefer: str | None = None) -> dict:
 
 
 def normalize(s: str) -> str:
-    """Lowercase + remove acentos pra matching fuzzy."""
+    """Lowercase + remove acentos + remove pontuação simples — pra matching fuzzy."""
     if not s:
         return ''
     nfkd = unicodedata.normalize('NFKD', s)
-    return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
+    no_acc = ''.join(c for c in nfkd if not unicodedata.combining(c))
+    return (no_acc
+            .lower()
+            .replace('-', ' ')
+            .replace("'", '')
+            .replace('.', '')
+            .strip())
 
 
-# Tradução pt-BR (como está no banco) → inglês (como vem da API-Football).
-# Se a API mudar a grafia de algum time, basta atualizar aqui.
+# Tradução pt-BR (como está no banco) → inglês (como vem da football-data.org).
+# Cobertura: nomes diretos + variações comuns. Se a API mudar a grafia, edita aqui.
 PT_TO_EN = {
     'México':                'Mexico',
     'África do Sul':         'South Africa',
     'Coreia do Sul':         'South Korea',
     'República Tcheca':      'Czech Republic',
     'Canadá':                'Canada',
-    'Bósnia e Herzegovina':  'Bosnia and Herzegovina',
-    'Estados Unidos':        'USA',
+    'Bósnia e Herzegovina':  'Bosnia-Herzegovina',
+    'Estados Unidos':        'United States',
     'Paraguai':              'Paraguay',
     'Austrália':             'Australia',
     'Turquia':               'Turkey',
@@ -77,7 +84,7 @@ PT_TO_EN = {
     'Curaçao':               'Curacao',
     'Holanda':               'Netherlands',
     'Japão':                 'Japan',
-    'Costa do Marfim':       'Ivory Coast',
+    'Costa do Marfim':       "Côte d'Ivoire",
     'Equador':               'Ecuador',
     'Suécia':                'Sweden',
     'Tunísia':               'Tunisia',
@@ -109,12 +116,22 @@ PT_TO_EN = {
 
 
 def team_matches(api_name: str, pt_name: str) -> bool:
-    """Heurística: bate o nome vindo da API com o nome em pt-BR do nosso banco."""
+    """Heurística: bate nome vindo da API com nome em pt-BR do nosso banco.
+
+    Estratégias (em ordem):
+      1. Match exato normalizado contra a tradução pt→en (PT_TO_EN).
+      2. Match exato normalizado contra o próprio nome pt-BR
+         (caso a API use acentuação igual à nossa).
+      3. Substring (em qualquer direção) como fallback —
+         cobre variações tipo "USA" vs "United States" ou
+         "Iran" vs "IR Iran".
+    """
+    if not api_name or not pt_name:
+        return False
     en_name = PT_TO_EN.get(pt_name, pt_name)
     api_n = normalize(api_name)
-    pt_n  = normalize(pt_name)
     en_n  = normalize(en_name)
+    pt_n  = normalize(pt_name)
     if api_n == en_n or api_n == pt_n:
         return True
-    # fallback: substring match (cobre variações como "USA" vs "United States")
-    return en_n in api_n or api_n in en_n or pt_n in api_n
+    return (en_n in api_n) or (api_n in en_n) or (pt_n in api_n)
