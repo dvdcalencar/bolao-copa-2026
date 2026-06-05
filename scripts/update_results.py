@@ -1,28 +1,30 @@
 """
 UPDATE — rodado em cron pelo GitHub Actions.
-Busca jogos encerrados na API-Football e faz UPSERT em official_results.
+Busca jogos encerrados na football-data.org e faz UPSERT em official_results.
 
-Variáveis de ambiente esperadas:
-  API_FOOTBALL_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY
+Variáveis de ambiente: FOOTBALL_DATA_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY
 """
 
 import sys
 import requests
 
 from common import (
-    LEAGUE_ID, SEASON, API_BASE,
+    COMPETITION, API_BASE,
     get_config, api_headers, sb_headers,
     team_matches,
 )
 
 
-def fetch_finished_fixtures(cfg):
-    """Pega fixtures com status FT (Match Finished)."""
-    url = f'{API_BASE}/fixtures'
-    params = {'league': LEAGUE_ID, 'season': SEASON, 'status': 'FT'}
-    r = requests.get(url, headers=api_headers(cfg['api_key']), params=params, timeout=30)
-    r.raise_for_status()
-    return r.json().get('response', []) or []
+def fetch_finished_matches(cfg):
+    """Pega matches com status FINISHED."""
+    url = f'{API_BASE}/competitions/{COMPETITION}/matches'
+    params = {'status': 'FINISHED'}
+    r = requests.get(url, headers=api_headers(cfg['football_token']),
+                     params=params, timeout=30)
+    if r.status_code != 200:
+        print(f'❌ HTTP {r.status_code}: {r.text[:300]}', file=sys.stderr)
+        sys.exit(1)
+    return r.json().get('matches', []) or []
 
 
 def fetch_mapped_games(cfg):
@@ -55,9 +57,9 @@ def upsert_result(cfg, game_id, gols_sel1, gols_sel2):
 def main():
     cfg = get_config()
 
-    print('🔍 Buscando jogos encerrados na API…')
-    finished = fetch_finished_fixtures(cfg)
-    print(f'   {len(finished)} fixtures com status FT.')
+    print('🔍 Buscando jogos encerrados na football-data.org…')
+    finished = fetch_finished_matches(cfg)
+    print(f'   {len(finished)} matches com status FINISHED.')
 
     print('🔍 Buscando mapeamento de jogos no Supabase…')
     mapping = fetch_mapped_games(cfg)
@@ -70,21 +72,23 @@ def main():
 
     updated, unmapped, errors = 0, 0, 0
 
-    for f in finished:
-        ext_id = f['fixture']['id']
+    for m in finished:
+        ext_id = m['id']
         g = mapping.get(ext_id)
         if not g:
             unmapped += 1
             continue
 
-        h_goals = f['goals']['home']
-        a_goals = f['goals']['away']
+        # Score do tempo regulamentar (fullTime)
+        full = (m.get('score') or {}).get('fullTime') or {}
+        h_goals = full.get('home')
+        a_goals = full.get('away')
         if h_goals is None or a_goals is None:
             continue
 
-        home_name = f['teams']['home']['name']
+        home_name = (m.get('homeTeam') or {}).get('name', '')
 
-        # Descobre a ordem: home da API corresponde a sel1 ou sel2 da nossa base?
+        # home da API = sel1 ou sel2 da base? Determina pela comparação de nomes.
         if team_matches(home_name, g['sel1']):
             gols_sel1, gols_sel2 = h_goals, a_goals
         else:
@@ -100,9 +104,9 @@ def main():
 
     print(f'\n✨ {updated} resultado(s) atualizado(s).')
     if unmapped:
-        print(f'   {unmapped} fixture(s) encerrado(s) sem mapeamento (rode o bootstrap).')
+        print(f'   {unmapped} match(es) encerrado(s) sem mapeamento.')
     if errors:
-        print(f'❌ {errors} erro(s) ao gravar — saindo com código 1.', file=sys.stderr)
+        print(f'❌ {errors} erro(s) ao gravar.', file=sys.stderr)
         sys.exit(1)
 
 
