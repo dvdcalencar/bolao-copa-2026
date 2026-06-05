@@ -1,0 +1,35 @@
+name: Atualiza Resultados (Copa 2026)
+
+on:
+  # A cada 30 minutos, em qualquer hora, nos dias 11-30 de junho de 2026.
+  # GitHub Actions roda em UTC; os horários reais podem variar ~10 min.
+  schedule:
+    - cron: '*/30 * 11-30 6 *'
+
+  # Permite disparar manualmente pela aba Actions do GitHub.
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run update script
+        env:
+          API_FOOTBALL_KEY:     ${{ secrets.API_FOOTBALL_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/update_results.py
