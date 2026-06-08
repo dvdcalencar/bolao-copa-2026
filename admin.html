@@ -251,6 +251,48 @@
     color: rgba(255,255,255,0.5);
     font-style: italic;
   }
+
+  /* New participants */
+  .np-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border-left: 4px solid var(--orange-warn);
+    flex-wrap: wrap;
+  }
+  .np-info { min-width: 150px; }
+  .np-pront {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold);
+    font-size: 13px;
+  }
+  .np-note {
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+  .np-nome {
+    flex: 1; min-width: 140px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: var(--white);
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: 'Barlow', sans-serif;
+  }
+  .np-nome:focus { outline: none; border-color: var(--gold); }
+  .np-pago {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: rgba(255,255,255,0.8);
+    cursor: pointer; user-select: none;
+    white-space: nowrap;
+  }
+  .np-pago input {
+    width: 18px; height: 18px;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -272,6 +314,8 @@
       A página lê cada CSV, identifica o participante pelo campo <code>User</code> (PRONT-NOME) e cruza com a tabela
       <code>participants</code> do Supabase. Só monta SQL pra participantes que <strong>já estão cadastrados como pagos</strong>
       — quem não está, é ignorado (com aviso). Depois você copia o SQL gerado e cola no <strong>SQL Editor</strong> do Supabase.
+      Se algum PRONT do CSV ainda não estiver cadastrado (ou estiver marcado como não pago), uma seção de
+      <strong>cadastro de participantes</strong> aparece abaixo pra você gerar o SQL de inclusão deles.
     </div>
   </section>
 
@@ -291,6 +335,31 @@
     <div class="actions" id="actions" style="display:none;">
       <button class="btn primary" id="btn-generate">📜 Gerar SQL</button>
       <button class="btn secondary" id="btn-clear">🗑 Limpar lista</button>
+    </div>
+  </section>
+
+  <!-- NEW PARTICIPANTS -->
+  <section class="section" id="new-participants-section" style="display:none;">
+    <div class="section-title">👤 Participantes não cadastrados</div>
+    <div class="help" style="margin-bottom: 12px;">
+      Estes PRONTs apareceram nos CSVs mas não estão em <code>participants</code> como pagos. Confira o nome
+      sugerido, marque a flag <strong>Pago</strong> (ticada = pago, desticada = não pago) e gere o SQL de cadastro.
+      Depois rode no Supabase e arraste os CSVs de novo pra importar os palpites.
+    </div>
+    <div class="file-list" id="new-participants-list"></div>
+    <div class="actions">
+      <button class="btn primary" id="btn-generate-participants-sql">📜 Gerar SQL de cadastro</button>
+    </div>
+  </section>
+
+  <!-- NEW PARTICIPANTS SQL OUTPUT -->
+  <section class="section" id="participants-output-section" style="display:none;">
+    <div class="section-title">📋 SQL de cadastro gerado</div>
+    <div class="sql-stats" id="participants-sql-stats"></div>
+    <textarea class="sql-output" id="participants-sql-output" readonly></textarea>
+    <div class="actions" style="margin-top: 10px;">
+      <button class="btn primary" id="btn-copy-participants-sql">📋 Copiar tudo</button>
+      <button class="btn secondary" id="btn-open-supabase-participants">🔗 Abrir SQL Editor do Supabase</button>
     </div>
   </section>
 
@@ -321,9 +390,11 @@
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // ─── State ──────────────────────────────────────────
-  let participantsByPront = {};   // {pront upper → uuid}
-  let gamesByIdConf       = {};   // {"MEXAFS" → 1}
-  let parsedFiles         = [];   // [{name, user, rows, status, error?}]
+  let participantsByPront    = {};   // {pront upper → row}  — só pagos (usado pra casar palpites)
+  let allParticipantsByPront = {};   // {pront upper → row}  — todos (pra detectar "já existe, mas não pago")
+  let gamesByIdConf          = {};   // {"MEXAFS" → 1}
+  let parsedFiles            = [];   // [{name, user, rows, status, error?}]
+  let newParticipants        = {};   // {pront upper → {pront, nome, pago, existing}}
 
   // ─── Helpers ────────────────────────────────────────
   const $ = id => document.getElementById(id);
@@ -339,10 +410,31 @@
     return String(v).replace(/'/g, "''");
   }
 
+  function escapeHTML(v) {
+    return String(v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Sugere um nome amigável a partir do formato PRONT-NOME (ex.: "2465-DEYVID" → "Deyvid")
+  function suggestNome(pront) {
+    const idx = pront.indexOf('-');
+    if (idx < 0) return '';
+    const raw = pront.slice(idx + 1).trim();
+    if (!raw) return '';
+    return raw
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+  }
+
   // ─── Load reference data ────────────────────────────
   async function loadReferenceData() {
     const [pRes, gRes] = await Promise.all([
-      sb.from('participants').select('id, pront, nome').eq('pago', true),
+      sb.from('participants').select('id, pront, nome, pago'),
       sb.from('games').select('id, code1, code2')
     ]);
 
@@ -353,7 +445,9 @@
     }
 
     (pRes.data || []).forEach(p => {
-      participantsByPront[String(p.pront).toUpperCase().trim()] = p;
+      const key = String(p.pront).toUpperCase().trim();
+      allParticipantsByPront[key] = p;
+      if (p.pago) participantsByPront[key] = p;
     });
     (gRes.data || []).forEach(g => {
       gamesByIdConf[g.code1 + g.code2] = g.id;
@@ -397,8 +491,13 @@
     // Match participant
     const p = participantsByPront[fileObj.user];
     if (!p) {
+      const existing = allParticipantsByPront[fileObj.user];
       fileObj.status = 'error';
-      fileObj.errors.push(`Participante "${fileObj.user}" não está cadastrado em participants (ou está marcado como pago=false).`);
+      fileObj.newParticipant = true;
+      fileObj.existingUnpaid = !!existing;
+      fileObj.errors.push(existing
+        ? `Participante "${fileObj.user}" está cadastrado, mas marcado como não pago.`
+        : `Participante "${fileObj.user}" não está cadastrado em participants.`);
       return fileObj;
     }
     fileObj.participant = p;
@@ -435,6 +534,100 @@
       fileObj.status = 'ok';
     }
     return fileObj;
+  }
+
+  // ─── New participants (cadastro) ────────────────────
+  function rebuildNewParticipants() {
+    const prontsSeen = new Set();
+    parsedFiles.forEach(f => {
+      if (f.newParticipant && f.user) prontsSeen.add(f.user);
+    });
+
+    // remove entries cujo arquivo foi removido da lista
+    Object.keys(newParticipants).forEach(pront => {
+      if (!prontsSeen.has(pront)) delete newParticipants[pront];
+    });
+
+    // adiciona novos, preservando edições já feitas pelo usuário
+    prontsSeen.forEach(pront => {
+      if (newParticipants[pront]) return;
+      const existing = allParticipantsByPront[pront];
+      newParticipants[pront] = {
+        pront,
+        nome: (existing && existing.nome) || suggestNome(pront),
+        pago: existing ? false : true,   // já cadastrado-mas-não-pago → mantém desticado por padrão
+        existing: !!existing
+      };
+    });
+  }
+
+  function renderNewParticipants() {
+    const section = $('new-participants-section');
+    const entries = Object.values(newParticipants);
+
+    if (entries.length === 0) {
+      section.style.display = 'none';
+      $('participants-output-section').style.display = 'none';
+      $('participants-sql-output').value = '';
+      return;
+    }
+
+    section.style.display = 'block';
+    const list = $('new-participants-list');
+    list.innerHTML = entries.map(np => `
+      <div class="np-item">
+        <div class="np-info">
+          <div class="np-pront">${escapeHTML(np.pront)}</div>
+          <div class="np-note">${np.existing ? 'já cadastrado · marcado como não pago' : 'novo participante'}</div>
+        </div>
+        <input type="text" class="np-nome" data-pront="${escapeHTML(np.pront)}" value="${escapeHTML(np.nome)}" placeholder="Nome (opcional)">
+        <label class="np-pago">
+          <input type="checkbox" data-pront="${escapeHTML(np.pront)}" ${np.pago ? 'checked' : ''}>
+          Pago
+        </label>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.np-nome').forEach(inp => {
+      inp.addEventListener('input', () => {
+        if (newParticipants[inp.dataset.pront]) newParticipants[inp.dataset.pront].nome = inp.value;
+      });
+    });
+    list.querySelectorAll('.np-pago input').forEach(chk => {
+      chk.addEventListener('change', () => {
+        if (newParticipants[chk.dataset.pront]) newParticipants[chk.dataset.pront].pago = chk.checked;
+      });
+    });
+  }
+
+  function generateParticipantsSQL() {
+    const entries = Object.values(newParticipants);
+    if (entries.length === 0) {
+      showToast('Nenhum participante novo pra cadastrar.');
+      return;
+    }
+
+    const values = entries.map(np => {
+      const nome = np.nome.trim() ? `'${escapeSQL(np.nome.trim())}'` : 'NULL';
+      return `  ('${escapeSQL(np.pront)}', ${nome}, ${np.pago ? 'true' : 'false'})`;
+    }).join(',\n');
+
+    const sql = `INSERT INTO participants (pront, nome, pago) VALUES
+${values}
+ON CONFLICT (pront) DO UPDATE SET
+  nome = COALESCE(EXCLUDED.nome, participants.nome),
+  pago = EXCLUDED.pago;
+`;
+
+    const pagos = entries.filter(n => n.pago).length;
+    $('participants-sql-output').value = sql;
+    $('participants-sql-stats').innerHTML = `
+      <div><strong>${entries.length}</strong>participante${entries.length>1?'s':''} pra cadastrar/atualizar</div>
+      <div><strong>${pagos}</strong>marcado${pagos!==1?'s':''} como pago</div>
+      <div><strong>${entries.length - pagos}</strong>marcado${(entries.length - pagos)!==1?'s':''} como não pago</div>
+    `;
+    $('participants-output-section').style.display = 'block';
+    $('participants-output-section').scrollIntoView({ behavior: 'smooth' });
   }
 
   // ─── Render file list ───────────────────────────────
@@ -478,6 +671,9 @@
     $('actions').style.display = parsedFiles.length > 0 ? 'flex' : 'none';
     const ok = parsedFiles.some(f => f.status !== 'error');
     $('btn-generate').disabled = !ok;
+
+    rebuildNewParticipants();
+    renderNewParticipants();
   }
 
   // ─── Generate SQL ───────────────────────────────────
@@ -553,6 +749,7 @@ ON CONFLICT (participant_id, game_id) DO UPDATE SET
   $('btn-generate').addEventListener('click', generateSQL);
   $('btn-clear').addEventListener('click', () => {
     parsedFiles = [];
+    newParticipants = {};
     renderFileList();
     $('output-section').style.display = 'none';
   });
@@ -568,6 +765,23 @@ ON CONFLICT (participant_id, game_id) DO UPDATE SET
     }
   });
   $('btn-open-supabase').addEventListener('click', () => {
+    window.open(SUPABASE_SQL_EDITOR_URL, '_blank');
+  });
+
+  // ─── New participants buttons ──────────────────────
+  $('btn-generate-participants-sql').addEventListener('click', generateParticipantsSQL);
+  $('btn-copy-participants-sql').addEventListener('click', async () => {
+    const ta = $('participants-sql-output');
+    try {
+      await navigator.clipboard.writeText(ta.value);
+      showToast('✅ SQL copiado!');
+    } catch (e) {
+      ta.select();
+      document.execCommand('copy');
+      showToast('✅ SQL copiado!');
+    }
+  });
+  $('btn-open-supabase-participants').addEventListener('click', () => {
     window.open(SUPABASE_SQL_EDITOR_URL, '_blank');
   });
 
