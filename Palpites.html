@@ -537,6 +537,178 @@
 
   .whatsapp-btn:active { transform: scale(0.97); }
 
+  .pix-btn {
+    flex: 1;
+    padding: 14px 6px;
+    background: linear-gradient(135deg, #32BCAD, #1a9a8c);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 3px 12px rgba(50,188,173,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .pix-btn:active { transform: scale(0.97); }
+
+  /* ─── MODAL PIX ─── */
+  .pix-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    z-index: 600;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .pix-modal-overlay.show { display: flex; }
+
+  .pix-modal-sheet {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 22px 24px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .pix-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: #f0f0f0;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    color: #888;
+    line-height: 32px;
+    transition: background 0.15s, transform 0.15s;
+  }
+
+  .pix-modal-close:hover { background: #e0e0e0; transform: rotate(90deg); }
+
+  .pix-modal-icon {
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .pix-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: var(--green-dark);
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+
+  .pix-modal-bank {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    color: #888;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .pix-modal-name {
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+  }
+
+  .pix-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: #32BCAD;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .pix-qrcode {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .pix-qrcode img,
+  .pix-qrcode canvas {
+    border: 6px solid #f0f0f0;
+    border-radius: 12px;
+    display: block;
+  }
+
+  .pix-key-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-dark);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    text-align: left;
+    background: rgba(255, 215, 0, 0.25);
+    border-left: 3px solid var(--gold-dark);
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+
+  .pix-key-row {
+    display: flex;
+    align-items: center;
+    background: #f8f9f8;
+    border: 1.5px solid #e0e4e0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .pix-key-text {
+    flex: 1;
+    font-family: 'Barlow', sans-serif;
+    font-size: 9.5px;
+    color: #111;
+    font-weight: 600;
+    word-break: break-all;
+    text-align: left;
+    line-height: 1.5;
+    user-select: all;
+  }
+
+  .pix-copy-btn {
+    flex-shrink: 0;
+    background: var(--green-field);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .pix-copy-btn:hover { background: var(--green-dark); }
+  .pix-copy-btn:active { transform: scale(0.9); }
+
   /* ─── TOAST ─── */
   .toast {
     position: fixed;
@@ -862,6 +1034,9 @@
     <button class="whatsapp-btn" onclick="shareWhatsApp()">
       <span>📲</span> WHATSAPP
     </button>
+    <button class="pix-btn" onclick="openPixModal()">
+      <span>💸</span> PIX
+    </button>
   </div>
 </div>
 
@@ -889,6 +1064,31 @@
       <button class="modal-btn share" onclick="shareCSVFile()">📎 COMPARTILHAR CSV (ANEXO)</button>
       <button class="modal-btn success" onclick="shareWhatsApp(); closeModal()">📲 ABRIR WHATSAPP</button>
       <button class="modal-btn cancel" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL PIX ─── -->
+<div class="pix-modal-overlay" id="pix-modal">
+  <div class="pix-modal-sheet">
+    <button class="pix-modal-close" onclick="closePixModal()" aria-label="Fechar">×</button>
+    <div class="pix-modal-icon">💸</div>
+    <div class="pix-modal-title">PAGAMENTO PIX</div>
+    <div class="pix-modal-bank">Banco Bradesco</div>
+    <div class="pix-modal-name">Deyvid de Castro Alencar</div>
+    <div class="pix-amount">R$ 100,00</div>
+    <div class="pix-qrcode">
+      <img src="qr-bradesco.png" alt="QR Code PIX Bradesco" width="200" height="200">
+    </div>
+    <div class="pix-key-label">Chave PIX (copia e cola)</div>
+    <div class="pix-key-row">
+      <span class="pix-key-text" id="pix-key-text">00020126470014BR.GOV.BCB.PIX0111925725453490210Bolão Copa5204000053039865406100.005802BR5924DEYVID DE CASTRO ALENCAR6009SAO PAULO62090505Bolao630419AA</span>
+      <button class="pix-copy-btn" onclick="copyPixKey()" title="Copiar chave PIX" aria-label="Copiar chave PIX">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </div>
@@ -1487,6 +1687,49 @@ function shareWhatsApp() {
   );
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, '_blank');
 }
+
+// ─────────────────────────────────────────────
+//  PIX MODAL
+// ─────────────────────────────────────────────
+function openPixModal() {
+  document.getElementById('pix-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePixModal() {
+  document.getElementById('pix-modal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function copyPixKey() {
+  const key = document.getElementById('pix-key-text').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(key).then(() => {
+      showToast('✅ Chave PIX copiada!');
+    }).catch(() => fallbackCopy(key));
+  } else {
+    fallbackCopy(key);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('✅ Chave PIX copiada!');
+  } catch(e) {
+    showToast('❌ Não foi possível copiar');
+  }
+  document.body.removeChild(ta);
+}
+
+document.getElementById('pix-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePixModal();
+});
 
 // ─────────────────────────────────────────────
 //  TOAST
