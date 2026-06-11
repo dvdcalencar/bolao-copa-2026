@@ -39,7 +39,31 @@ ICONS = {
     'AWARDED':   '⚖️',
 }
 
-print(f'\n📊 {len(matches)} matches retornados pela API.\n')
+# ─── TESTE EXTRA: endpoint /v4/matches (que a homepage deles usa) ──
+print('🧪 Testando endpoint /v4/matches (mesmo da homepage)…')
+r_alt = requests.get(f'{API_BASE}/matches',
+                     headers={'X-Auth-Token': token}, timeout=30)
+if r_alt.status_code == 200:
+    alt_matches = r_alt.json().get('matches', [])
+    print(f'   /v4/matches retornou {len(alt_matches)} jogos hoje (todas competições).')
+    # Procura jogos da Copa neles
+    wc_alt = [m for m in alt_matches if (m.get('competition') or {}).get('code') == 'WC']
+    print(f'   Desses, {len(wc_alt)} são da Copa do Mundo (WC).')
+    fin_alt = [m for m in wc_alt if m['status'] == 'FINISHED']
+    if fin_alt:
+        print(f'   Jogos FINISHED da Copa via /v4/matches:')
+        for m in fin_alt:
+            s = (m.get('score') or {}).get('fullTime') or {}
+            sh, sa = s.get('home'), s.get('away')
+            h = safe_team(m.get('homeTeam'))
+            a = safe_team(m.get('awayTeam'))
+            score = f"{sh}×{sa}" if sh is not None else "NULL"
+            print(f'      Match {m["id"]}: {h} {score} {a}')
+else:
+    print(f'   ⚠️  /v4/matches retornou HTTP {r_alt.status_code}')
+print()
+
+print(f'📊 {len(matches)} matches retornados via /competitions/WC/matches.\n')
 print(f'{"#":>5} {"Status":<11} {"Data UTC":<17} {"Mandante":>22}  {"Placar":^8}  {"Visitante":<22}')
 print('─' * 100)
 
