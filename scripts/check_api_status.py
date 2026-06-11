@@ -1,9 +1,6 @@
 """
-DEBUG — mostra o status ATUAL de todos os 72 jogos direto da
-football-data.org. Útil pra confirmar se um placar já foi marcado
-como FINISHED na fonte ou se a API ainda está atrasada.
-
-Variável de ambiente: FOOTBALL_DATA_TOKEN
+DEBUG — testa 3 endpoints da football-data.org pra entender por que o placar
+não está aparecendo. Compara /competitions/WC/matches × /matches/{id} × /matches.
 """
 
 import os
@@ -19,106 +16,84 @@ if not token:
     print('❌ FOOTBALL_DATA_TOKEN não está definido.', file=sys.stderr)
     sys.exit(1)
 
-url = f'{API_BASE}/competitions/{COMPETITION}/matches'
-r = requests.get(url, headers={'X-Auth-Token': token}, timeout=30)
-if r.status_code != 200:
-    print(f'❌ HTTP {r.status_code}: {r.text[:200]}', file=sys.stderr)
-    sys.exit(1)
-
-matches = r.json().get('matches', []) or []
+HEADERS = {'X-Auth-Token': token}
 
 ICONS = {
-    'FINISHED':  '✅',
-    'IN_PLAY':   '🔴',
-    'PAUSED':    '⏸️',
-    'TIMED':     '📅',
-    'SCHEDULED': '📅',
-    'POSTPONED': '⏳',
-    'SUSPENDED': '⏸️',
-    'CANCELLED': '❌',
-    'AWARDED':   '⚖️',
+    'FINISHED': '✅', 'IN_PLAY': '🔴', 'PAUSED': '⏸️', 'TIMED': '📅',
+    'SCHEDULED': '📅', 'POSTPONED': '⏳', 'SUSPENDED': '⏸️',
+    'CANCELLED': '❌', 'AWARDED': '⚖️',
 }
 
-# ─── TESTE EXTRA: endpoint /v4/matches (que a homepage deles usa) ──
-print('🧪 Testando endpoint /v4/matches (mesmo da homepage)…')
-r_alt = requests.get(f'{API_BASE}/matches',
-                     headers={'X-Auth-Token': token}, timeout=30)
-if r_alt.status_code == 200:
-    alt_matches = r_alt.json().get('matches', [])
-    print(f'   /v4/matches retornou {len(alt_matches)} jogos hoje (todas competições).')
-    # Procura jogos da Copa neles
-    wc_alt = [m for m in alt_matches if (m.get('competition') or {}).get('code') == 'WC']
-    print(f'   Desses, {len(wc_alt)} são da Copa do Mundo (WC).')
-    fin_alt = [m for m in wc_alt if m['status'] == 'FINISHED']
-    if fin_alt:
-        print(f'   Jogos FINISHED da Copa via /v4/matches:')
-        for m in fin_alt:
-            s = (m.get('score') or {}).get('fullTime') or {}
-            sh, sa = s.get('home'), s.get('away')
-            h = safe_team(m.get('homeTeam'))
-            a = safe_team(m.get('awayTeam'))
-            score = f"{sh}×{sa}" if sh is not None else "NULL"
-            print(f'      Match {m["id"]}: {h} {score} {a}')
-else:
-    print(f'   ⚠️  /v4/matches retornou HTTP {r_alt.status_code}')
-print()
-
-print(f'📊 {len(matches)} matches retornados via /competitions/WC/matches.\n')
-print(f'{"#":>5} {"Status":<11} {"Data UTC":<17} {"Mandante":>22}  {"Placar":^8}  {"Visitante":<22}')
-print('─' * 100)
 
 def safe_team(team_obj):
-    """Trata homeTeam/awayTeam que pode ser None (jogo de mata-mata sem time definido)."""
     if not team_obj:
         return 'TBD'
-    name = team_obj.get('name')
-    return (name or 'TBD')[:22]
+    return (team_obj.get('name') or 'TBD')[:22]
 
-for m in sorted(matches, key=lambda x: x.get('utcDate', '')):
-    ic     = ICONS.get(m['status'], '❓')
-    ext_id = m['id']
-    date   = m.get('utcDate', '')[:16].replace('T', ' ')
-    home   = safe_team(m.get('homeTeam'))
-    away   = safe_team(m.get('awayTeam'))
-    s      = (m.get('score') or {}).get('fullTime') or {}
+
+def safe_score(m):
+    s = (m.get('score') or {}).get('fullTime') or {}
     sh, sa = s.get('home'), s.get('away')
-    score  = f"{sh}×{sa}" if sh is not None and sa is not None else '─×─'
-    print(f'{ext_id:>5} {ic} {m["status"]:<9} {date:<17} {home:>22}  {score:^8}  {away:<22}')
+    if sh is None or sa is None:
+        return 'NULL'
+    return f'{sh}×{sa}'
 
-print('\n📈 RESUMO POR STATUS:')
+
+# ─── ENDPOINT 1: /v4/matches (mesmo da homepage) ─────────────────
+print('🧪 ENDPOINT 1 — /v4/matches (mesmo da homepage deles)')
+r = requests.get(f'{API_BASE}/matches', headers=HEADERS, timeout=30)
+if r.status_code == 200:
+    data = r.json().get('matches', []) or []
+    wc = [m for m in data if (m.get('competition') or {}).get('code') == 'WC']
+    print(f'   Total retornado: {len(data)} | Da Copa: {len(wc)}')
+    for m in wc:
+        print(f'   {m["id"]}  status={m["status"]:<10} placar={safe_score(m)}  '
+              f'{safe_team(m.get("homeTeam"))} × {safe_team(m.get("awayTeam"))}')
+else:
+    print(f'   ⚠️  HTTP {r.status_code}: {r.text[:200]}')
+print()
+
+# ─── ENDPOINT 2: /v4/competitions/WC/matches (o que usamos no cron) ──
+print('🧪 ENDPOINT 2 — /v4/competitions/WC/matches (o que o cron usa)')
+r = requests.get(f'{API_BASE}/competitions/{COMPETITION}/matches',
+                 headers=HEADERS, timeout=30)
+matches = r.json().get('matches', []) if r.status_code == 200 else []
+print(f'   Total retornado: {len(matches)}')
+
+finished = [m for m in matches if m['status'] == 'FINISHED']
+print(f'   FINISHED: {len(finished)}')
+for m in finished:
+    print(f'   {m["id"]}  placar={safe_score(m)}  '
+          f'{safe_team(m.get("homeTeam"))} × {safe_team(m.get("awayTeam"))}')
+print()
+
+# ─── ENDPOINT 3: /v4/matches/{id} pra cada FINISHED sem placar ───
+print('🧪 ENDPOINT 3 — /v4/matches/{id} individual pros FINISHED sem placar')
+suspeitos = [m for m in finished if safe_score(m) == 'NULL']
+if not suspeitos:
+    print('   Nenhum FINISHED sem placar — nada a testar.')
+else:
+    for m in suspeitos:
+        mid = m['id']
+        r2 = requests.get(f'{API_BASE}/matches/{mid}', headers=HEADERS, timeout=30)
+        if r2.status_code == 200:
+            placar = safe_score(r2.json())
+            print(f'   Match {mid}: status={r2.json().get("status")}  placar={placar}')
+        else:
+            print(f'   Match {mid}: HTTP {r2.status_code}')
+print()
+
+# ─── RESUMO POR STATUS ──────────────────────────────────────────
+print('📈 RESUMO POR STATUS (do endpoint /competitions/WC/matches):')
 for status, qtd in Counter(m['status'] for m in matches).most_common():
     print(f'   {ICONS.get(status, "❓")} {status}: {qtd}')
 
-# ─── INVESTIGAÇÃO: FINISHED sem placar ───────────────────────
-suspeitos = []
-for m in matches:
-    if m['status'] != 'FINISHED':
-        continue
-    s = (m.get('score') or {}).get('fullTime') or {}
-    if s.get('home') is None or s.get('away') is None:
-        suspeitos.append(m)
-
-if suspeitos:
-    print(f'\n🔎 INVESTIGANDO {len(suspeitos)} jogo(s) FINISHED sem placar — '
-          f'consultando /matches/{{id}} (mesmo endpoint que a homepage usa):\n')
-    for m in suspeitos:
-        mid  = m['id']
-        home = safe_team(m.get('homeTeam'))
-        away = safe_team(m.get('awayTeam'))
-        r2 = requests.get(f'{API_BASE}/matches/{mid}',
-                          headers={'X-Auth-Token': token}, timeout=30)
-        if r2.status_code != 200:
-            print(f'   Match {mid} ({home} × {away}): HTTP {r2.status_code}')
-            continue
-        m2 = r2.json()
-        s2 = (m2.get('score') or {}).get('fullTime') or {}
-        sh, sa = s2.get('home'), s2.get('away')
-        if sh is not None and sa is not None:
-            print(f'   ⚠️  Match {mid} ({home} × {away}):')
-            print(f'      /competitions/WC/matches → status FINISHED, placar NULL')
-            print(f'      /matches/{mid}            → status FINISHED, placar {sh}×{sa}  ← TEM!')
-        else:
-            print(f'   Match {mid} ({home} × {away}): ambos endpoints sem placar.')
-    print(f'\n   Se o endpoint individual já tem o placar mas o do filtro de competição não,')
-    print(f'   confirma que tem CACHE no endpoint /competitions/WC/matches que a gente usa.')
-    print(f'   Solução: trocar a query pra usar /matches?competitions=WC ou puxar individual.')
+# ─── TABELA COMPLETA (compacta) ─────────────────────────────────
+print('\n📋 TODOS OS 104 JOGOS:')
+print(f'{"#":>5}  {"Status":<10}  {"Data UTC":<17}  {"Mandante":>22}  {"Placar":^7}  {"Visitante":<22}')
+print('─' * 100)
+for m in sorted(matches, key=lambda x: x.get('utcDate', '')):
+    ic = ICONS.get(m['status'], '❓')
+    date = m.get('utcDate', '')[:16].replace('T', ' ')
+    print(f'{m["id"]:>5}  {ic} {m["status"]:<8}  {date:<17}  '
+          f'{safe_team(m.get("homeTeam")):>22}  {safe_score(m):^7}  {safe_team(m.get("awayTeam")):<22}')
