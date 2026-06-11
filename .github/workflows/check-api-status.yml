@@ -1,0 +1,31 @@
+name: Debug — Status dos jogos na API
+
+# Dispara manual pela aba Actions sempre que quiser verificar
+# o que a football-data.org tem agora — quais jogos estão
+# FINISHED, IN_PLAY, SCHEDULED, etc.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check API status
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+        run: python scripts/check_api_status.py
