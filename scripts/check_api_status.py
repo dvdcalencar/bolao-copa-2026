@@ -43,12 +43,19 @@ print(f'\n📊 {len(matches)} matches retornados pela API.\n')
 print(f'{"#":>5} {"Status":<11} {"Data UTC":<17} {"Mandante":>22}  {"Placar":^8}  {"Visitante":<22}')
 print('─' * 100)
 
+def safe_team(team_obj):
+    """Trata homeTeam/awayTeam que pode ser None (jogo de mata-mata sem time definido)."""
+    if not team_obj:
+        return 'TBD'
+    name = team_obj.get('name')
+    return (name or 'TBD')[:22]
+
 for m in sorted(matches, key=lambda x: x.get('utcDate', '')):
     ic     = ICONS.get(m['status'], '❓')
     ext_id = m['id']
     date   = m.get('utcDate', '')[:16].replace('T', ' ')
-    home   = (m.get('homeTeam') or {}).get('name', '')[:22]
-    away   = (m.get('awayTeam') or {}).get('name', '')[:22]
+    home   = safe_team(m.get('homeTeam'))
+    away   = safe_team(m.get('awayTeam'))
     s      = (m.get('score') or {}).get('fullTime') or {}
     sh, sa = s.get('home'), s.get('away')
     score  = f"{sh}×{sa}" if sh is not None and sa is not None else '─×─'
