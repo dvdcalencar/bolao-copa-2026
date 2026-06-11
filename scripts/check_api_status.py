@@ -1,0 +1,59 @@
+"""
+DEBUG — mostra o status ATUAL de todos os 72 jogos direto da
+football-data.org. Útil pra confirmar se um placar já foi marcado
+como FINISHED na fonte ou se a API ainda está atrasada.
+
+Variável de ambiente: FOOTBALL_DATA_TOKEN
+"""
+
+import os
+import sys
+import requests
+from collections import Counter
+
+API_BASE    = 'https://api.football-data.org/v4'
+COMPETITION = 'WC'
+
+token = os.environ.get('FOOTBALL_DATA_TOKEN')
+if not token:
+    print('❌ FOOTBALL_DATA_TOKEN não está definido.', file=sys.stderr)
+    sys.exit(1)
+
+url = f'{API_BASE}/competitions/{COMPETITION}/matches'
+r = requests.get(url, headers={'X-Auth-Token': token}, timeout=30)
+if r.status_code != 200:
+    print(f'❌ HTTP {r.status_code}: {r.text[:200]}', file=sys.stderr)
+    sys.exit(1)
+
+matches = r.json().get('matches', []) or []
+
+ICONS = {
+    'FINISHED':  '✅',
+    'IN_PLAY':   '🔴',
+    'PAUSED':    '⏸️',
+    'TIMED':     '📅',
+    'SCHEDULED': '📅',
+    'POSTPONED': '⏳',
+    'SUSPENDED': '⏸️',
+    'CANCELLED': '❌',
+    'AWARDED':   '⚖️',
+}
+
+print(f'\n📊 {len(matches)} matches retornados pela API.\n')
+print(f'{"#":>5} {"Status":<11} {"Data UTC":<17} {"Mandante":>22}  {"Placar":^8}  {"Visitante":<22}')
+print('─' * 100)
+
+for m in sorted(matches, key=lambda x: x.get('utcDate', '')):
+    ic     = ICONS.get(m['status'], '❓')
+    ext_id = m['id']
+    date   = m.get('utcDate', '')[:16].replace('T', ' ')
+    home   = (m.get('homeTeam') or {}).get('name', '')[:22]
+    away   = (m.get('awayTeam') or {}).get('name', '')[:22]
+    s      = (m.get('score') or {}).get('fullTime') or {}
+    sh, sa = s.get('home'), s.get('away')
+    score  = f"{sh}×{sa}" if sh is not None and sa is not None else '─×─'
+    print(f'{ext_id:>5} {ic} {m["status"]:<9} {date:<17} {home:>22}  {score:^8}  {away:<22}')
+
+print('\n📈 RESUMO POR STATUS:')
+for status, qtd in Counter(m['status'] for m in matches).most_common():
+    print(f'   {ICONS.get(status, "❓")} {status}: {qtd}')
