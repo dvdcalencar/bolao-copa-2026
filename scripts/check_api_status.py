@@ -64,3 +64,37 @@ for m in sorted(matches, key=lambda x: x.get('utcDate', '')):
 print('\n📈 RESUMO POR STATUS:')
 for status, qtd in Counter(m['status'] for m in matches).most_common():
     print(f'   {ICONS.get(status, "❓")} {status}: {qtd}')
+
+# ─── INVESTIGAÇÃO: FINISHED sem placar ───────────────────────
+suspeitos = []
+for m in matches:
+    if m['status'] != 'FINISHED':
+        continue
+    s = (m.get('score') or {}).get('fullTime') or {}
+    if s.get('home') is None or s.get('away') is None:
+        suspeitos.append(m)
+
+if suspeitos:
+    print(f'\n🔎 INVESTIGANDO {len(suspeitos)} jogo(s) FINISHED sem placar — '
+          f'consultando /matches/{{id}} (mesmo endpoint que a homepage usa):\n')
+    for m in suspeitos:
+        mid  = m['id']
+        home = safe_team(m.get('homeTeam'))
+        away = safe_team(m.get('awayTeam'))
+        r2 = requests.get(f'{API_BASE}/matches/{mid}',
+                          headers={'X-Auth-Token': token}, timeout=30)
+        if r2.status_code != 200:
+            print(f'   Match {mid} ({home} × {away}): HTTP {r2.status_code}')
+            continue
+        m2 = r2.json()
+        s2 = (m2.get('score') or {}).get('fullTime') or {}
+        sh, sa = s2.get('home'), s2.get('away')
+        if sh is not None and sa is not None:
+            print(f'   ⚠️  Match {mid} ({home} × {away}):')
+            print(f'      /competitions/WC/matches → status FINISHED, placar NULL')
+            print(f'      /matches/{mid}            → status FINISHED, placar {sh}×{sa}  ← TEM!')
+        else:
+            print(f'   Match {mid} ({home} × {away}): ambos endpoints sem placar.')
+    print(f'\n   Se o endpoint individual já tem o placar mas o do filtro de competição não,')
+    print(f'   confirma que tem CACHE no endpoint /competitions/WC/matches que a gente usa.')
+    print(f'   Solução: trocar a query pra usar /matches?competitions=WC ou puxar individual.')
