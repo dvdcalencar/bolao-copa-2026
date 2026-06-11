@@ -22,15 +22,18 @@ from common import (
 
 
 def fetch_finished_matches(cfg):
-    """Lista jogos FINISHED via endpoint de competição."""
+    """Lista jogos FINISHED. Pega TODOS os matches e filtra em Python —
+    o filtro ?status=FINISHED da API às vezes retorna 0 mesmo havendo jogos
+    encerrados (algum cache deles)."""
     url = f'{API_BASE}/competitions/{COMPETITION}/matches'
-    params = {'status': 'FINISHED'}
-    r = requests.get(url, headers=api_headers(cfg['football_token']),
-                     params=params, timeout=30)
+    r = requests.get(url, headers=api_headers(cfg['football_token']), timeout=30)
     if r.status_code != 200:
         print(f'❌ HTTP {r.status_code}: {r.text[:300]}', file=sys.stderr)
         sys.exit(1)
-    return r.json().get('matches', []) or []
+    all_matches = r.json().get('matches', []) or []
+    finished = [m for m in all_matches if m.get('status') == 'FINISHED']
+    print(f'   (total no endpoint: {len(all_matches)} | FINISHED: {len(finished)})')
+    return finished
 
 
 def fetch_single_match(cfg, match_id):
