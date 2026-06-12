@@ -806,6 +806,11 @@
     color: var(--gold);
     font-weight: 900;
   }
+  .digit-hit {
+    color: var(--gold);
+    font-weight: 900;
+    text-shadow: 0 0 6px rgba(255,215,0,0.5);
+  }
   .comp-table th.col-oficial {
     color: var(--gold);
     background: rgba(255,215,0,0.18);
@@ -1769,11 +1774,16 @@
 
     const rows = games.map(g => {
       const pp = ppMap[g.id];
-      const palpiteCell = pp
-        ? `<span class="score-pill">${pp.palpite_sel1} × ${pp.palpite_sel2}</span>`
-        : `<span class="score-pill pending">— × —</span>`;
-      const oficialCell = (pp && pp.oficial_sel1 != null)
-        ? `<span class="score-pill">${pp.oficial_sel1} × ${pp.oficial_sel2}</span>`
+      const hasOficial = pp && pp.oficial_sel1 != null;
+      const palpiteCell = pp ? (() => {
+        const d1 = (hasOficial && pp.palpite_sel1 === pp.oficial_sel1)
+          ? `<span class="digit-hit">${pp.palpite_sel1}</span>` : pp.palpite_sel1;
+        const d2 = (hasOficial && pp.palpite_sel2 === pp.oficial_sel2)
+          ? `<span class="digit-hit">${pp.palpite_sel2}</span>` : pp.palpite_sel2;
+        return `<span class="score-pill">${d1} × ${d2}</span>`;
+      })() : `<span class="score-pill pending">— × —</span>`;
+      const oficialCell = hasOficial
+        ? `<span class="score-pill oficial"><span class="score-num">${pp.oficial_sel1}</span> × <span class="score-num">${pp.oficial_sel2}</span></span>`
         : `<span class="score-pill pending">— × —</span>`;
 
       let ptsCell;
@@ -2280,8 +2290,17 @@
       if (isBrazilGame(g))  trClasses.push('is-brazil');
       if (ambasCravadas)    trClasses.push('placar-cheio');
 
-      const palpiteACell = a ? `<span class="score-pill${palpitesIguais ? ' comp-pal-equal' : ''}">${a.gols_sel1} × ${a.gols_sel2}</span>` : `<span class="score-pill pending">— × —</span>`;
-      const palpiteBCell = b ? `<span class="score-pill${palpitesIguais ? ' comp-pal-equal' : ''}">${b.gols_sel1} × ${b.gols_sel2}</span>` : `<span class="score-pill pending">— × —</span>`;
+      const buildPalpiteCell = (pred, equalClass) => {
+        if (!pred) return `<span class="score-pill pending">— × —</span>`;
+        const d1 = (r && pred.gols_sel1 === r.gols_sel1)
+          ? `<span class="digit-hit">${pred.gols_sel1}</span>` : pred.gols_sel1;
+        const d2 = (r && pred.gols_sel2 === r.gols_sel2)
+          ? `<span class="digit-hit">${pred.gols_sel2}</span>` : pred.gols_sel2;
+        return `<span class="score-pill${equalClass ? ' comp-pal-equal' : ''}">${d1} × ${d2}</span>`;
+      };
+
+      const palpiteACell = buildPalpiteCell(a, palpitesIguais);
+      const palpiteBCell = buildPalpiteCell(b, palpitesIguais);
       const oficialCell = r
         ? `<span class="score-pill oficial"><span class="score-num">${r.gols_sel1}</span> × <span class="score-num">${r.gols_sel2}</span></span>`
         : `<span class="score-pill pending">— × —</span>`;
