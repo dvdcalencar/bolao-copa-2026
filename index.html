@@ -796,6 +796,20 @@
   .comp-table tr.placar-cheio td {
     background: linear-gradient(90deg, rgba(255,215,0,0.18), rgba(255,215,0,0.06)) !important;
   }
+  .score-pill.oficial {
+    background: rgba(255,215,0,0.15);
+    border: 1px solid rgba(255,215,0,0.4);
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .score-pill.oficial .score-num {
+    color: var(--gold);
+    font-weight: 900;
+  }
+  .comp-table th.col-oficial {
+    color: var(--gold);
+    background: rgba(255,215,0,0.18);
+  }
   .comp-pal-equal {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
   }
@@ -2268,12 +2282,16 @@
 
       const palpiteACell = a ? `<span class="score-pill${palpitesIguais ? ' comp-pal-equal' : ''}">${a.gols_sel1} × ${a.gols_sel2}</span>` : `<span class="score-pill pending">— × —</span>`;
       const palpiteBCell = b ? `<span class="score-pill${palpitesIguais ? ' comp-pal-equal' : ''}">${b.gols_sel1} × ${b.gols_sel2}</span>` : `<span class="score-pill pending">— × —</span>`;
+      const oficialCell = r
+        ? `<span class="score-pill oficial"><span class="score-num">${r.gols_sel1}</span> × <span class="score-num">${r.gols_sel2}</span></span>`
+        : `<span class="score-pill pending">— × —</span>`;
 
       return `
         <tr class="${trClasses.join(' ')}">
           <td>#${g.id}</td>
           <td class="team-l">${escapeHtml(g.code1)} ${g.flag1 || ''}</td>
           <td>${palpiteACell}</td>
+          <td>${oficialCell}</td>
           <td>${palpiteBCell}</td>
           <td class="team-r">${g.flag2 || ''} ${escapeHtml(g.code2)}</td>
           <td>${ptsCell(bkA)}</td>
@@ -2291,6 +2309,7 @@
               <th>Jogo</th>
               <th>Seleção 1</th>
               <th title="${escapeHtml(nameOf(p1))}">${escapeHtml(nameOf(p1))}</th>
+              <th class="col-oficial">Resultado</th>
               <th title="${escapeHtml(nameOf(p2))}">${escapeHtml(nameOf(p2))}</th>
               <th>Seleção 2</th>
               <th title="Pontos de ${escapeHtml(nameOf(p1))}">Pts ${escapeHtml(nameOf(p1)).slice(0,12)}</th>
