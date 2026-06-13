@@ -671,6 +671,62 @@
   }
   .cravadas-table tr:last-child td { border-bottom: none; }
 
+  /* ─── PALPITES POR JOGO ─── */
+  .palpites-jogo-summary {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+  }
+  .palpites-jogo-summary strong { color: rgba(255,255,255,0.85); }
+  .palpites-jogo-game-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .palpites-jogo-game-label .score-pill { font-size: 14px; }
+  .palpites-jogo-wrap { overflow-x: auto; }
+  .palpites-jogo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .palpites-jogo-table th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .palpites-jogo-table th.left { text-align: left; }
+  .palpites-jogo-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-align: center;
+    color: rgba(255,255,255,0.8);
+  }
+  .palpites-jogo-table td.part-name { text-align: left; font-weight: 600; }
+  .palpites-jogo-table .part-pront {
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+  }
+  .palpites-jogo-table tr:last-child td { border-bottom: none; }
+  .palpites-jogo-table tr.placar-cheio td { background: rgba(255,215,0,0.06); }
+  .palpites-jogo-table tr.no-palpite td { opacity: 0.4; }
+
   /* ─── COMPARATIVO ─── */
   .comp-selectors {
     display: grid;
@@ -1419,6 +1475,14 @@
     <div id="cravadas-content"></div>
   </section>
 
+  <section class="section">
+    <div class="section-title">PALPITES POR JOGO</div>
+    <select id="palpites-jogo-select" class="participant-selector">
+      <option value="">— Escolha um jogo —</option>
+    </select>
+    <div id="palpites-jogo-content"></div>
+  </section>
+
 </div><!-- /tab-detalhe -->
 
 <div id="tab-comparativo" class="tab-content">
@@ -2160,6 +2224,140 @@
     parseEmojis(target);
   }
 
+  // ─── PALPITES POR JOGO ───────────────────────────────────
+  let _palpitesJogoListLoaded = false;
+
+  async function loadPalpitesJogoList() {
+    if (_palpitesJogoListLoaded) return;
+
+    const [gamesRes, resRes] = await Promise.all([
+      sb.from('games').select('id, dia, code1, code2, flag1, flag2').order('id'),
+      sb.from('official_results').select('game_id, gols_sel1, gols_sel2')
+    ]);
+    if (gamesRes.error) { console.error(gamesRes.error); return; }
+
+    const resMap = {};
+    (resRes.data || []).forEach(r => { resMap[r.game_id] = r; });
+    const games = gamesRes.data || [];
+
+    const sel = document.getElementById('palpites-jogo-select');
+    if (games.length === 0) {
+      sel.innerHTML = `<option value="">— Sem jogos cadastrados —</option>`;
+      sel.disabled = true;
+    } else {
+      games.forEach(g => {
+        const r = resMap[g.id];
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = r
+          ? `#${g.id} · ${g.code1} ${r.gols_sel1}×${r.gols_sel2} ${g.code2} · ${formatDateBR(g.dia)}`
+          : `#${g.id} · ${g.code1} × ${g.code2} · ${formatDateBR(g.dia)}`;
+        sel.appendChild(opt);
+      });
+    }
+    _palpitesJogoListLoaded = true;
+  }
+
+  async function loadPalpitesByJogo(gameId) {
+    const target = document.getElementById('palpites-jogo-content');
+    target.innerHTML = `<div class="loading">Buscando palpites…</div>`;
+
+    const [gameRes, resRes, partsRes, predsRes] = await Promise.all([
+      sb.from('games').select('*').eq('id', gameId).single(),
+      sb.from('official_results').select('*').eq('game_id', gameId).single(),
+      sb.from('participants').select('id, pront, nome').eq('pago', true).order('nome'),
+      sb.from('predictions').select('participant_id, gols_sel1, gols_sel2').eq('game_id', gameId)
+    ]);
+
+    if (gameRes.error || partsRes.error) {
+      target.innerHTML = `<div class="error">⚠️ Erro ao carregar dados do jogo.</div>`;
+      return;
+    }
+
+    const g = gameRes.data;
+    const r = resRes.error ? null : resRes.data;
+    const parts = partsRes.data || [];
+
+    const predsMap = {};
+    (predsRes.data || []).forEach(p => { predsMap[p.participant_id] = p; });
+
+    // Monta uma linha por participante
+    const rows = parts.map(part => {
+      const pred = predsMap[part.id] || null;
+      const bk   = (pred && r) ? computeBreakdown(pred.gols_sel1, pred.gols_sel2, r.gols_sel1, r.gols_sel2) : null;
+      const pts   = bk ? bk.total : 0;
+      return { part, pred, bk, pts };
+    });
+
+    // Ordena: mais pontos primeiro, depois por nome
+    rows.sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      const na = (a.part.nome || a.part.pront).toLowerCase();
+      const nb = (b.part.nome || b.part.pront).toLowerCase();
+      return na.localeCompare(nb);
+    });
+
+    const totalParts   = parts.length;
+    const comPalpite   = rows.filter(x => x.pred).length;
+    const cravadas     = rows.filter(x => x.pts === 5).length;
+    const semPalpite   = totalParts - comPalpite;
+
+    const gameLabel = r
+      ? `${escapeHtml(g.code1)} ${g.flag1 || ''} <span class="score-pill" style="background:var(--gold);color:var(--green-dark);">${r.gols_sel1} × ${r.gols_sel2}</span> ${g.flag2 || ''} ${escapeHtml(g.code2)}`
+      : `${escapeHtml(g.code1)} ${g.flag1 || ''} × ${g.flag2 || ''} ${escapeHtml(g.code2)}`;
+
+    const tableRows = rows.map(({ part, pred, bk, pts }) => {
+      const partName = part.nome
+        ? `${escapeHtml(part.nome)} <span class="part-pront">(${escapeHtml(part.pront)})</span>`
+        : escapeHtml(part.pront);
+      const palpiteCell = pred
+        ? `<span class="score-pill">${pred.gols_sel1} × ${pred.gols_sel2}</span>`
+        : `<span style="color:rgba(255,255,255,0.25);">—</span>`;
+      const oficialCell = r
+        ? `<span class="score-pill" style="background:var(--gold);color:var(--green-dark);">${r.gols_sel1} × ${r.gols_sel2}</span>`
+        : `<span style="color:rgba(255,255,255,0.25);">—</span>`;
+      const ptsPill = bk == null
+        ? `<span class="pts-pill zero">—</span>`
+        : bk.total === 0
+          ? `<span class="pts-pill zero">0</span>`
+          : `<span class="pts-pill has-${bk.total === 5 ? 5 : bk.total >= 3 ? 3 : bk.total >= 2 ? 2 : 1}">${bk.total}</span>`;
+      const trCls = [
+        pts === 5 ? 'placar-cheio' : '',
+        !pred    ? 'no-palpite'   : ''
+      ].filter(Boolean).join(' ');
+      return `
+        <tr class="${trCls}">
+          <td class="part-name">${partName}</td>
+          <td>${palpiteCell}</td>
+          <td>${oficialCell}</td>
+          <td>${ptsPill}</td>
+        </tr>`;
+    }).join('');
+
+    target.innerHTML = `
+      <div class="palpites-jogo-game-label">#${g.id} · ${gameLabel} · ${formatDateBR(g.dia)}</div>
+      <div class="palpites-jogo-summary">
+        <div><strong>${comPalpite}</strong> de <strong>${totalParts}</strong> palpitaram</div>
+        ${cravadas > 0 ? `<div>🎯 <strong>${cravadas}</strong> cravada${cravadas !== 1 ? 's' : ''}</div>` : ''}
+        ${semPalpite > 0 ? `<div><strong>${semPalpite}</strong> sem palpite</div>` : ''}
+      </div>
+      <div class="palpites-jogo-wrap">
+        <table class="palpites-jogo-table">
+          <thead>
+            <tr>
+              <th class="left">Participante</th>
+              <th>Palpite</th>
+              <th>Oficial</th>
+              <th>Pontos</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    `;
+    parseEmojis(target);
+  }
+
   // ─── COMPARATIVO ─────────────────────────────────────────
   let _compParticipantsLoaded = false;
   let _compParticipants = [];          // [{id, pront, nome}]
@@ -2596,6 +2794,7 @@
     if (tabName === 'detalhe') {
       loadDetalheParticipantsList();
       loadCravadasDates();
+      loadPalpitesJogoList();
     }
     if (tabName === 'comparativo') {
       loadComparativoParticipantsList();
@@ -2653,6 +2852,12 @@
     const dia = e.target.value;
     if (dia) loadCravadasByDate(dia);
     else document.getElementById('cravadas-content').innerHTML = '';
+  });
+
+  document.getElementById('palpites-jogo-select').addEventListener('change', e => {
+    const id = e.target.value;
+    if (id) loadPalpitesByJogo(parseInt(id, 10));
+    else document.getElementById('palpites-jogo-content').innerHTML = '';
   });
 
   document.getElementById('comp-p1-select').addEventListener('change', renderComparativo);
