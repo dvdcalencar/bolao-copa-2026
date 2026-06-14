@@ -270,6 +270,69 @@
     line-height: 1.2;
   }
 
+  /* ─── RESULTS TABLE ─── */
+  .results-table-wrap { overflow-x: auto; }
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .results-table th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 7px 10px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .results-table th.rt-th-team { text-align: center; }
+  .results-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.8);
+    text-align: center;
+    vertical-align: middle;
+  }
+  .results-table tr:last-child td { border-bottom: none; }
+  .results-table tr.is-brazil td { background: rgba(255,215,0,0.05); }
+  .rt-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .rt-meta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .rt-hora { color: rgba(255,255,255,0.3); }
+  .rt-grupo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .rt-team-l { text-align: right; white-space: nowrap; }
+  .rt-team-r { text-align: left;  white-space: nowrap; }
+  .rt-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 17px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 6px;
+    white-space: nowrap;
+    padding: 3px 10px;
+  }
+
   /* ─── PARTICIPANT SELECTOR ─── */
   .participant-selector {
     width: 100%;
@@ -1728,8 +1791,8 @@
     const resMap = {};
     (resultsRes.data || []).forEach(r => { resMap[r.game_id] = r; });
 
-    // Só os jogos com resultado oficial preenchido
-    const playedGames = games.filter(g => resMap[g.id]);
+    // Só os jogos com resultado oficial preenchido — mais recentes primeiro
+    const playedGames = games.filter(g => resMap[g.id]).reverse();
     const totalEncerrados = playedGames.length;
 
     if (totalEncerrados === 0) {
@@ -1737,34 +1800,18 @@
       return;
     }
 
-    const grupos = [...new Set(playedGames.map(g => g.grupo))].sort();
-    const html = grupos.map(grupo => {
-      const gs = playedGames.filter(g => g.grupo === grupo);
-      const lines = gs.map(g => {
-        const r = resMap[g.id];
-        const brClass = isBrazilGame(g) ? ' is-brazil' : '';
-        return `
-          <div class="game-line${brClass}">
-            <div class="game-num">#${g.id}</div>
-            <div class="game-team-l">
-              <span class="game-team-code">${escapeHtml(g.code1)}</span>
-              <span class="game-team-flag">${g.flag1 || ''}</span>
-            </div>
-            <div class="game-score">${r.gols_sel1} × ${r.gols_sel2}</div>
-            <div class="game-team-r">
-              <span class="game-team-flag">${g.flag2 || ''}</span>
-              <span class="game-team-code">${escapeHtml(g.code2)}</span>
-            </div>
-            <div class="game-meta">${formatDateBR(g.dia)}<br>${(g.hora || '').slice(0,5)}</div>
-          </div>
-        `;
-      }).join('');
-
+    const rows = playedGames.map(g => {
+      const r = resMap[g.id];
+      const brClass = isBrazilGame(g) ? ' is-brazil' : '';
       return `
-        <div class="group-block">
-          <div class="group-title">GRUPO ${escapeHtml(grupo)}</div>
-          ${lines}
-        </div>
+        <tr class="${brClass}">
+          <td class="rt-num">#${g.id}</td>
+          <td class="rt-meta">${formatDateBR(g.dia)}<br><span class="rt-hora">${(g.hora || '').slice(0,5)}</span></td>
+          <td class="rt-grupo">${escapeHtml(g.grupo || '—')}</td>
+          <td class="rt-team-l"><span class="game-team-flag">${g.flag1 || ''}</span> <span class="game-team-code">${escapeHtml(g.code1)}</span></td>
+          <td><span class="score-pill" style="background:var(--gold);color:var(--green-dark);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;">${r.gols_sel1} × ${r.gols_sel2}</span></td>
+          <td class="rt-team-r"><span class="game-team-code">${escapeHtml(g.code2)}</span> <span class="game-team-flag">${g.flag2 || ''}</span></td>
+        </tr>
       `;
     }).join('');
 
@@ -1772,7 +1819,21 @@
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;letter-spacing:1px;">
         ${totalEncerrados} jogo${totalEncerrados !== 1 ? 's' : ''} encerrado${totalEncerrados !== 1 ? 's' : ''} de 72
       </div>
-      ${html}
+      <div class="results-table-wrap">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Data</th>
+              <th>Grupo</th>
+              <th class="rt-th-team">Seleção 1</th>
+              <th>Placar</th>
+              <th class="rt-th-team">Seleção 2</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     `;
     parseEmojis(container);
   }
