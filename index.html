@@ -938,12 +938,68 @@
     box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
   }
 
+  .comp-card-breakdown {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255,215,0,0.2);
+  }
+  .comp-bd-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  .comp-bd-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .comp-bd-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 34px;
+    padding: 4px 6px 5px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    transition: transform 0.15s ease;
+  }
+  .comp-bd-chip:hover { transform: translateY(-1px); }
+  .comp-bd-chip strong {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+  .comp-bd-chip span {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 1px;
+  }
+  .comp-bd-chip.c5 { background: rgba(255,215,0,0.14); }
+  .comp-bd-chip.c5 strong { color: var(--gold); }
+  .comp-bd-chip.c3 { background: rgba(91,200,91,0.14); }
+  .comp-bd-chip.c3 strong { color: #5BC85B; }
+  .comp-bd-chip.c2 { background: rgba(74,157,219,0.14); }
+  .comp-bd-chip.c2 strong { color: #4A9DDB; }
+  .comp-bd-chip.c1 { background: rgba(185,134,67,0.14); }
+  .comp-bd-chip.c1 strong { color: #B98643; }
+  .comp-bd-chip.c0 { background: rgba(255,255,255,0.04); }
+  .comp-bd-chip.c0 strong { color: rgba(255,255,255,0.35); }
+
   @media (max-width: 540px) {
     .comp-selectors {
       grid-template-columns: 1fr;
       gap: 6px;
     }
     .comp-vs { display: none; }
+  }
+  @media (max-width: 380px) {
+    .comp-bd-chip { min-width: 28px; padding: 3px 4px 4px; }
+    .comp-bd-chip strong { font-size: 14px; }
   }
 
   /* ─── BOTÃO DO APITO (header) ─── */
@@ -1883,6 +1939,7 @@
     const totalPalpites = (ppRes.data || []).length;
     const pontosTotal   = (ppRes.data || []).reduce((acc, p) => acc + (p.pontos || 0), 0);
     const acertos5      = (ppRes.data || []).filter(p => p.pontos === 5).length;
+    const zeradas       = (ppRes.data || []).filter(p => p.pontos === 0).length;
 
     const nome = participant.nome ? `${participant.nome} (${participant.pront})` : participant.pront;
 
@@ -1893,6 +1950,7 @@
           <div>Palpites<strong>${totalPalpites}/72</strong></div>
           <div>Pontos<strong>${pontosTotal}</strong></div>
           <div>Cravadas<strong>${acertos5}</strong></div>
+          <div>Zeradas<strong>${zeradas}</strong></div>
         </div>
       </div>
     `;
@@ -2036,7 +2094,7 @@
     const predsMap   = {}; (predsRes.data   || []).forEach(p => { predsMap[p.game_id]   = p; });
     const resultsMap = {}; (resultsRes.data || []).forEach(r => { resultsMap[r.game_id] = r; });
 
-    let totalPts = 0, totalCravadas = 0, jogosEncerrados = 0, palpitesFeitos = 0;
+    let totalPts = 0, totalCravadas = 0, totalZeradas = 0, jogosEncerrados = 0, palpitesFeitos = 0;
     const rows = _detalheGames.map(g => {
       const p = predsMap[g.id];
       const r = resultsMap[g.id];
@@ -2055,6 +2113,7 @@
       if (bk) {
         totalPts += bk.total;
         if (bk.placar === 5) totalCravadas++;
+        if (bk.total === 0)  totalZeradas++;
       }
 
       const cravada = bk && bk.placar === 5;
@@ -2099,6 +2158,7 @@
         <div class="detalhe-summary-stats">
           <div>Pontos<strong>${totalPts}</strong></div>
           <div>Cravadas<strong>${totalCravadas}</strong></div>
+          <div>Zeradas<strong>${totalZeradas}</strong></div>
           <div>Encerrados<strong>${jogosEncerrados}/72</strong></div>
           <div>Palpites<strong>${palpitesFeitos}/72</strong></div>
         </div>
@@ -2488,6 +2548,34 @@
 
     const nameOf = p => p.nome ? p.nome : p.pront;
 
+    // Distribuição de pontos por jogo (5/3/2/1/0) de cada participante
+    const pointsBreakdown = (preds) => {
+      const counts = { 5: 0, 3: 0, 2: 0, 1: 0, 0: 0 };
+      games.forEach(g => {
+        const pred = preds[g.id];
+        const r = resMap[g.id];
+        if (!pred || !r) return;
+        const bk = computeBreakdown(pred.gols_sel1, pred.gols_sel2, r.gols_sel1, r.gols_sel2);
+        if (bk) counts[bk.total] = (counts[bk.total] || 0) + 1;
+      });
+      return counts;
+    };
+    const p1Pts = pointsBreakdown(p1Preds);
+    const p2Pts = pointsBreakdown(p2Preds);
+
+    const breakdownHtml = (counts) => `
+      <div class="comp-card-breakdown">
+        <div class="comp-bd-label">Pontos por jogo</div>
+        <div class="comp-bd-row">
+          <div class="comp-bd-chip c5" title="Cravadas (5 pts)"><strong>${counts[5]}</strong><span>5 pts</span></div>
+          <div class="comp-bd-chip c3" title="Vencedor + 1 placar (3 pts)"><strong>${counts[3]}</strong><span>3 pts</span></div>
+          <div class="comp-bd-chip c2" title="Vencedor ou empate (2 pts)"><strong>${counts[2]}</strong><span>2 pts</span></div>
+          <div class="comp-bd-chip c1" title="1 placar acertado (1 pt)"><strong>${counts[1]}</strong><span>1 pt</span></div>
+          <div class="comp-bd-chip c0" title="Zeradas (0 pts)"><strong>${counts[0]}</strong><span>0 pts</span></div>
+        </div>
+      </div>
+    `;
+
     // Cards
     const cardsHtml = `
       <div class="comp-cards">
@@ -2504,6 +2592,7 @@
               <div class="comp-card-value">${p1.pontos}</div>
             </div>
           </div>
+          ${breakdownHtml(p1Pts)}
         </div>
         <div class="comp-card">
           <div class="comp-card-who">Participante 2</div>
@@ -2518,6 +2607,7 @@
               <div class="comp-card-value">${p2.pontos}</div>
             </div>
           </div>
+          ${breakdownHtml(p2Pts)}
         </div>
       </div>
     `;
