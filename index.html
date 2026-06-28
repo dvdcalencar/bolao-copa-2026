@@ -2703,6 +2703,28 @@
     topN: 10,
   };
 
+  // Supabase/PostgREST só devolve até 1000 linhas por request por padrão.
+  // Com 15+ participantes × 72 jogos a tabela predictions passa de 1000 linhas,
+  // então sem paginação o select truncava silenciosamente (faltavam palpites
+  // de alguns participantes → pontos errados na Evolução). Busca em páginas
+  // até esgotar os dados.
+  async function fetchAllPredictions() {
+    const pageSize = 1000;
+    let from = 0;
+    let all = [];
+    while (true) {
+      const { data, error } = await sb
+        .from('predictions')
+        .select('participant_id, game_id, gols_sel1, gols_sel2')
+        .range(from, from + pageSize - 1);
+      if (error) return { data: null, error };
+      all = all.concat(data || []);
+      if (!data || data.length < pageSize) break;
+      from += pageSize;
+    }
+    return { data: all, error: null };
+  }
+
   async function loadEvolucao() {
     if (_evolucao.loaded) return;
 
@@ -2712,7 +2734,7 @@
     const [partsRes, gamesRes, predsRes, resRes] = await Promise.all([
       sb.from('participants').select('id, pront, nome').eq('pago', true),
       sb.from('games').select('*').order('id'),
-      sb.from('predictions').select('participant_id, game_id, gols_sel1, gols_sel2'),
+      fetchAllPredictions(),
       sb.from('official_results').select('*'),
     ]);
 
@@ -2807,7 +2829,7 @@
         <button class="evolucao-btn primary" id="evol-play" type="button" title="Tocar / Pausar">▶</button>
         <button class="evolucao-btn" id="evol-next"    type="button" title="Próximo">▶▶</button>
         <input type="range" id="evol-slider" class="evolucao-slider" min="0" max="${total - 1}" value="0">
-        <div class="evolucao-counter" id="evol-counter">1/${total}</div>
+        <div class="evolucao-counter" id="evol-counter">0/${total - 1}</div>
       </div>
 
       <div class="evolucao-bars" id="evol-bars"></div>
@@ -2830,7 +2852,7 @@
     if (!frame) return;
 
     document.getElementById('evol-slider').value  = idx;
-    document.getElementById('evol-counter').textContent = `${idx + 1}/${total}`;
+    document.getElementById('evol-counter').textContent = `${idx}/${total - 1}`;
     document.getElementById('evol-frame-text').textContent = frame.label;
     document.getElementById('evol-frame-meta').textContent = frame.meta || '';
 
@@ -2875,6 +2897,18 @@
           bar.style.transform = `translateY(${yPos}px)`;
         });
       } else {
+        // Barra reaproveitada — se ela tinha saído do top N há pouco (classe
+        // "leaving") e ainda não foi removida do DOM, cancela a remoção
+        // pendente e tira a classe. Sem isso a barra "ressuscitava" com nome
+        // e pontos certos, mas ficava com opacity:0 (preso no CSS .leaving)
+        // e era apagada do DOM mais tarde pelo setTimeout antigo — sumindo
+        // da tela mesmo com os dados corretos (era o "TOP 10" com nomes
+        // faltando ao arrastar o slider rápido).
+        if (bar._leavingTimeout) {
+          clearTimeout(bar._leavingTimeout);
+          bar._leavingTimeout = null;
+        }
+        bar.classList.remove('leaving', 'entering');
         bar.style.transform = `translateY(${yPos}px)`;
       }
 
@@ -2900,7 +2934,7 @@
     Object.entries(existing).forEach(([id, el]) => {
       if (!stillVisible.has(id)) {
         el.classList.add('leaving');
-        setTimeout(() => { if (el.parentNode) el.remove(); }, 700);
+        el._leavingTimeout = setTimeout(() => { if (el.parentNode) el.remove(); }, 700);
       }
     });
   }
